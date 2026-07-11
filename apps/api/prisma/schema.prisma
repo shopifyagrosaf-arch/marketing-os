@@ -23,6 +23,7 @@ model Organization {
 
   brands Brand[]
   users  User[]
+  roles  Role[] // custom roles scoped to this organization (see Role's doc comment)
 
   @@map("organizations")
 }
@@ -70,17 +71,27 @@ enum UserStatus {
   EXPIRED // used for time-boxed External Agency/Freelancer accounts (SRS v2 1.4)
 }
 
-/// A named role. Seeded with the 14 roles from the SRS; Super Admin
-/// can create additional custom roles at runtime (FR: extensible RBAC).
+/// A named role. Seeded with the 14 roles from the SRS (organizationId
+/// null — global/system roles available to every organization); Super
+/// Admin can create additional custom roles at runtime (FR: extensible
+/// RBAC), which are scoped to the creating organizationId so a future
+/// second organization (see Organization's doc comment) can never see,
+/// assign, edit, or delete another organization's custom roles. Name stays
+/// globally unique for simplicity (not per-organization) — acceptable
+/// since only one organization exists today; revisit if/when a second
+/// organization actually onboards.
 model Role {
-  id       String  @id @default(cuid())
-  name     String  @unique
-  isCustom Boolean @default(false)
-  isOrgWide Boolean @default(false) // true for Super Admin / Marketing Head (not brand-scoped)
+  id             String  @id @default(cuid())
+  name           String  @unique
+  isCustom       Boolean @default(false)
+  isOrgWide      Boolean @default(false) // true for Super Admin / Marketing Head (not brand-scoped)
+  organizationId String? // null = global/system role; set = custom role scoped to this org
 
-  permissions     RolePermission[]
-  brandAccess     BrandAccess[]
+  organization Organization?    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  permissions  RolePermission[]
+  brandAccess  BrandAccess[]
 
+  @@index([organizationId])
   @@map("roles")
 }
 

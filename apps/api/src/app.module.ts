@@ -3,10 +3,13 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { PrismaModule } from './prisma/prisma.module';
+import { CommonModule } from './common/common.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { BrandsModule } from './modules/brands/brands.module';
 import { RolesModule } from './modules/roles/roles.module';
+import { PermissionsModule } from './modules/permissions/permissions.module';
+import { UsersModule } from './modules/users/users.module';
 import { HealthModule } from './modules/health/health.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -27,10 +30,13 @@ import { validateEnv } from './config/env.validation';
       },
     ]),
     PrismaModule,
+    CommonModule,
     AuthModule,
     OrganizationsModule,
     BrandsModule,
     RolesModule,
+    PermissionsModule,
+    UsersModule,
     HealthModule,
   ],
   providers: [

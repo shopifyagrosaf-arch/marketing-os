@@ -14,6 +14,14 @@ import { Roles } from '../../common/decorators/roles.decorator';
 export class BrandsController {
   constructor(private readonly brandsService: BrandsService) {}
 
+  /** Admin listing of every brand in the org — for the Brand Management screen. */
+  @Get()
+  @UseGuards(OrgRoleGuard)
+  @OrgRoles('SUPER_ADMIN', 'MARKETING_HEAD')
+  findAll(@CurrentUser() user: AuthenticatedUser) {
+    return this.brandsService.findAllForOrg(user.organizationId);
+  }
+
   /** Powers the brand switcher: every brand this user can switch into. */
   @Get('mine')
   findMine(@CurrentUser() user: AuthenticatedUser) {
@@ -43,10 +51,22 @@ export class BrandsController {
     return this.brandsService.findByIdForUser(id, user.id, user.organizationId);
   }
 
+  /** Admin update of any brand — distinct from PATCH /brands/mine (self-service by brand role). */
+  @Patch(':id')
+  @UseGuards(OrgRoleGuard)
+  @OrgRoles('SUPER_ADMIN')
+  updateAsAdmin(
+    @Param('id') id: string,
+    @Body() dto: UpdateBrandDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.brandsService.updateAsAdmin(id, user.organizationId, user.id, dto);
+  }
+
   @Post()
   @UseGuards(OrgRoleGuard)
   @OrgRoles('SUPER_ADMIN')
   create(@Body() dto: CreateBrandDto, @CurrentUser() user: AuthenticatedUser) {
-    return this.brandsService.create(dto, user.organizationId);
+    return this.brandsService.create(dto, user.organizationId, user.id);
   }
 }

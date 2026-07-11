@@ -5,17 +5,20 @@ planning, AI-assisted drafting, brand/compliance approval, publishing, and
 analytics across the group's four brands (Agrosaf Pharmaceuticals, Alosafe
 Pharmacare, Medizone, Hospital Marketing), operated by one shared marketing team.
 
-**Status:** Sprint 1 (foundation) complete — tagged `v0.1.0-foundation`. See
-[`CHANGELOG.md`](CHANGELOG.md) for release history.
+**Status:** Sprint 2 (User/Role/Permission/Organization/Brand management +
+Admin Dashboard) complete — tagged `v0.2.0-sprint2`. See
+[`ROADMAP.md`](ROADMAP.md) for what's next and [`CHANGELOG.md`](CHANGELOG.md)
+for release history.
 
 ## Documentation
 
+- [`ROADMAP.md`](ROADMAP.md) — phased delivery plan and current sprint status
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — system design, tenancy
   model, RBAC, auth flow
 - [`docs/adr/`](docs/adr/) — Architecture Decision Records (the *why* behind
   each significant technical choice)
 - [`docs/FOLDER_STRUCTURE.md`](docs/FOLDER_STRUCTURE.md) — annotated repo tree
-- [`docs/SPRINT_1.md`](docs/SPRINT_1.md) — Sprint 1 scope, endpoints, and review findings
+- [`docs/SPRINT_1.md`](docs/SPRINT_1.md) / [`docs/SPRINT_2.md`](docs/SPRINT_2.md) — per-sprint scope, endpoints, and review findings
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — branching, commit, and review conventions
 - [`CHANGELOG.md`](CHANGELOG.md) — release history (Keep a Changelog format)
 - [`LICENSE`](LICENSE) — MIT
@@ -66,6 +69,10 @@ SEED_SUPER_ADMIN_EMAIL=you@agrosafpharmaceuticals.com npm run prisma:seed
 npm run dev:api   # http://localhost:3001
 npm run dev:web   # http://localhost:3000
 ```
+
+Sign in with the email you set as `SEED_SUPER_ADMIN_EMAIL` to reach
+`/admin` — the Admin Dashboard (Users, Roles, Permissions, Brands,
+Organization) is gated to Super Admin/Marketing Head (see `docs/SPRINT_2.md`).
 
 ## Testing
 

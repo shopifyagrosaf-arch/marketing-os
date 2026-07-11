@@ -14,6 +14,7 @@ simplified in isolation but exist because of a constraint documented here.
 | [0005](0005-rbac-string-roles.md) | RBAC as string role + BrandAccess join, not a fixed enum | Accepted |
 | [0006](0006-phased-publishing-analytics.md) | Manual publishing/analytics first, API integrations phased | Accepted |
 | [0007](0007-tech-stack-selection.md) | Tech stack: Next.js / NestJS / PostgreSQL+Prisma / Redis / R2 / Auth.js | Accepted |
+| [0008](0008-role-organization-scoping.md) | Custom roles are organization-scoped; built-in roles are global | Accepted |
 
 New ADRs: copy [`0000-template.md`](0000-template.md), number it
 sequentially, and add a row above.

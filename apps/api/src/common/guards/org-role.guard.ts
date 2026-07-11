@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
-import { PrismaService } from '../../prisma/prisma.service';
+import { OrgAccessService } from '../services/org-access.service';
 import { ORG_ROLES_KEY } from '../decorators/org-roles.decorator';
 
 /** Guards org-wide actions (not scoped to a single brand) by org-wide role. */
@@ -9,7 +9,7 @@ import { ORG_ROLES_KEY } from '../decorators/org-roles.decorator';
 export class OrgRoleGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    private readonly prisma: PrismaService,
+    private readonly orgAccess: OrgAccessService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -27,12 +27,9 @@ export class OrgRoleGuard implements CanActivate {
       throw new ForbiddenException('Authentication required.');
     }
 
-    const orgWideAccess = await this.prisma.brandAccess.findFirst({
-      where: { userId: user.id, role: { isOrgWide: true } },
-      include: { role: true },
-    });
+    const orgWideAccess = await this.orgAccess.getOrgWideRole(user.id);
 
-    if (!orgWideAccess || !requiredRoles.includes(orgWideAccess.role.name)) {
+    if (!orgWideAccess || !requiredRoles.includes(orgWideAccess.roleName)) {
       throw new ForbiddenException(
         'This action requires an org-wide role: ' + requiredRoles.join(', '),
       );

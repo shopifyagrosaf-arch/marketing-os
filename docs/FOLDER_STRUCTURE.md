@@ -1,19 +1,20 @@
 # Folder Structure
 
-Generated against the actual repo tree as of `v0.1.0-foundation` — regenerate
-this file (don't hand-edit it stale) whenever a sprint adds a new top-level
-module or restructures an existing one.
+Generated against the actual repo tree as of Sprint 2 — regenerate this file
+(don't hand-edit it stale) whenever a sprint adds a new top-level module or
+restructures an existing one.
 
 ```
 MarketingOS/
 ├── apps/
 │   ├── api/                          NestJS backend
 │   │   ├── prisma/
-│   │   │   ├── schema.prisma         Organization/Brand/User/Role/... models
+│   │   │   ├── schema.prisma         Organization/Brand/User/Role/Permission/... models
 │   │   │   ├── seed.ts               Seeds org + 4 brands + 14 roles + Super Admin
 │   │   │   └── migrations/
 │   │   │       ├── migration_lock.toml
-│   │   │       └── 20260711123339_init/migration.sql
+│   │   │       ├── 20260711123339_init/migration.sql
+│   │   │       └── 20260711131402_role_organization_scoping/migration.sql
 │   │   ├── src/
 │   │   │   ├── main.ts               Bootstrap: Helmet, CORS, ValidationPipe, filters
 │   │   │   ├── app.module.ts         Wires every module + global guards/interceptors
@@ -28,20 +29,25 @@ MarketingOS/
 │   │   │   │   ├── decorators/       @Public, @Roles, @OrgRoles, @CurrentUser, @CurrentBrand
 │   │   │   │   ├── guards/           JwtAuthGuard, BrandAccessGuard, RolesGuard, OrgRoleGuard (+ .spec.ts siblings)
 │   │   │   │   ├── filters/          HttpExceptionFilter (consistent error shape + 5xx logging)
-│   │   │   │   └── interceptors/     LoggingInterceptor (method/path/duration/user/brand)
+│   │   │   │   ├── interceptors/     LoggingInterceptor (method/path/duration/user/brand)
+│   │   │   │   ├── audit/            AuditLogService — every module's audit trail writes go through this
+│   │   │   │   ├── services/         OrgAccessService — single source of truth for "org-wide role" lookups
+│   │   │   │   └── common.module.ts  @Global — exports AuditLogService + OrgAccessService
 │   │   │   └── modules/              One folder per feature; each owns its controller/service/module(/dto)
 │   │   │       ├── auth/             SSO token verification, user provisioning
 │   │   │       │   └── strategies/   passport-jwt strategy
-│   │   │       ├── organizations/
-│   │   │       ├── brands/
-│   │   │       │   └── dto/
-│   │   │       ├── roles/            Read-only in Sprint 1
+│   │   │       ├── organizations/    incl. dto/ (update)
+│   │   │       ├── brands/           incl. dto/ (create, update); admin + self-service endpoints
+│   │   │       ├── users/            incl. dto/ (create, update, status, grant-brand-access, list-query)
+│   │   │       ├── roles/            Full CRUD for custom roles; built-in roles immutable; incl. dto/
+│   │   │       ├── permissions/      incl. dto/ (create)
 │   │   │       └── health/           Public liveness check
 │   │   ├── test/                     e2e specs — real HTTP requests through the full Nest app
 │   │   │   ├── jest-e2e.json
 │   │   │   ├── jest-e2e.setup.ts     Env vars set here, NOT in spec files (see docs/SPRINT_1.md)
 │   │   │   ├── app.e2e-spec.ts
-│   │   │   └── brands.e2e-spec.ts    Full RBAC guard-chain integration test
+│   │   │   ├── brands.e2e-spec.ts    Brand-scoped RBAC chain (BrandAccessGuard+RolesGuard)
+│   │   │   └── users.e2e-spec.ts     Org-wide RBAC chain (OrgRoleGuard)
 │   │   ├── package.json / tsconfig.json / nest-cli.json / .eslintrc.js / .prettierrc.js
 │   │
 │   └── web/                          Next.js frontend (App Router)
@@ -49,7 +55,16 @@ MarketingOS/
 │       │   ├── app/
 │       │   │   ├── layout.tsx        Root layout
 │       │   │   ├── (auth)/login/     SSO-only login (no local credentials)
-│       │   │   ├── (dashboard)/      Protected shell: layout (brand switcher), page, loading, error
+│       │   │   ├── (dashboard)/      Protected shell: layout (brand switcher + admin nav), page, loading, error
+│       │   │   │   └── admin/        Server-gated (Super Admin/Marketing Head only)
+│       │   │   │       ├── layout.tsx        Redirects non-admins
+│       │   │   │       ├── page.tsx          Overview (counts)
+│       │   │   │       ├── users/            List, pre-provision, activate/suspend
+│       │   │   │       │   └── [id]/         Brand-access grant/revoke
+│       │   │   │       ├── roles/            List, create custom role + permission checklist
+│       │   │   │       ├── permissions/      List, create
+│       │   │   │       ├── brands/           List, create, inline edit
+│       │   │   │       └── organization/     Org settings form
 │       │   │   └── api/
 │       │   │       ├── auth/[...nextauth]/route.ts   Auth.js handlers
 │       │   │       └── proxy/[...path]/route.ts       Same-origin proxy to the NestJS API
@@ -58,7 +73,8 @@ MarketingOS/
 │       │   ├── lib/
 │       │   │   ├── auth.ts           NextAuth() config (Google + Microsoft Entra ID)
 │       │   │   ├── api-token.ts      server-only: mints the short-lived API JWT
-│       │   │   └── api-client.ts     Client-side fetch wrapper → always hits /api/proxy
+│       │   │   ├── api-client.ts     Client-side fetch wrapper → always hits /api/proxy
+│       │   │   └── server-api.ts     server-only: direct API fetch for Server Components/layouts
 │       │   └── middleware.ts         Redirects unauthenticated page navigation to /login
 │       ├── package.json / tsconfig.json / next.config.js / .eslintrc.json / jest.config.js
 │
@@ -75,8 +91,8 @@ MarketingOS/
 ├── docs/
 │   ├── ARCHITECTURE.md               System design: tenancy, RBAC, auth flow, tech stack
 │   ├── FOLDER_STRUCTURE.md           This file
-│   ├── SPRINT_1.md                   Sprint 1 scope, endpoints, review findings
-│   └── adr/                          Architecture Decision Records (0001-0007 + template)
+│   ├── SPRINT_1.md / SPRINT_2.md     Per-sprint scope, endpoints, review findings
+│   └── adr/                          Architecture Decision Records (0001-0008 + template)
 │
 ├── README.md / CHANGELOG.md / CONTRIBUTING.md / LICENSE
 ├── package.json                      Root — npm workspaces (apps/*, packages/*)
@@ -90,13 +106,21 @@ MarketingOS/
   shape: `<feature>.module.ts`, `<feature>.controller.ts`,
   `<feature>.service.ts`, optionally `dto/`. A new feature module should
   match this shape rather than inventing a new one.
-- **`apps/api/src/common/`** is for guards/decorators/filters/interceptors
-  used by *more than one* module. Feature-specific logic does not belong
-  here even if it feels reusable in theory — move it here only once a
-  second module actually needs it.
+- **`apps/api/src/common/`** is for guards/decorators/filters/interceptors/
+  services used by *more than one* module (e.g. `AuditLogService`,
+  `OrgAccessService`, added in Sprint 2 after the same logic showed up in
+  three different services). Feature-specific logic does not belong here
+  even if it feels reusable in theory — move it here only once a second
+  module actually needs it.
 - **Tests live next to what they test** (`*.spec.ts` beside the source file)
   for unit tests; **e2e tests live in `apps/api/test/`** since they exercise
-  the whole app, not one file.
+  the whole app, not one file. Every RBAC guard chain (brand-scoped,
+  org-wide) has at least one e2e test proving it's wired to a real route,
+  not just unit-tested in isolation.
+- **Admin-only frontend routes live under `(dashboard)/admin/`**, gated by
+  `admin/layout.tsx` (a Server Component checking `/auth/me`'s `orgRole`) —
+  this is a UX convenience, not the security boundary; the API's
+  `OrgRoleGuard` is the real enforcement point regardless of what the UI hides.
 - **`docs/adr/`** holds decisions, **`docs/SPRINT_N.md`** holds
   per-sprint scope/history — don't mix the two (an ADR shouldn't read like a
   changelog entry, and a sprint doc shouldn't need to justify a decision from

@@ -1,9 +1,16 @@
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import { signOut } from '@/lib/auth';
+import { serverApiFetch } from '@/lib/server-api';
 import { BrandProvider } from '@/components/brand-switcher/BrandProvider';
 import { BrandSwitcher } from '@/components/brand-switcher/BrandSwitcher';
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
+const ADMIN_ROLES = ['SUPER_ADMIN', 'MARKETING_HEAD'];
+
+export default async function DashboardLayout({ children }: { children: ReactNode }) {
+  const me = await serverApiFetch<{ orgRole: string | null }>('auth/me');
+  const isOrgAdmin = !!me && ADMIN_ROLES.includes(me.orgRole ?? '');
+
   return (
     <BrandProvider>
       <header
@@ -16,6 +23,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         }}
       >
         <strong>Agrosaf Marketing OS</strong>
+        <nav style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <Link href="/">Dashboard</Link>
+          {isOrgAdmin && <Link href="/admin">Admin</Link>}
+        </nav>
         <BrandSwitcher />
         <form
           action={async () => {
