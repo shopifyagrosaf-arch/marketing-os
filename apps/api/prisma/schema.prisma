@@ -1,0 +1,147 @@
+// Agrosaf Marketing OS — Sprint 1 schema
+// Scope: Organization/Brand hierarchy, Users, RBAC (Role/Permission/BrandAccess), Audit log.
+// Content/workflow/publishing/analytics models are added in later sprints per the roadmap.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// A company using the platform. Single row today (Agrosaf Group);
+/// modeled explicitly so the future multi-company SaaS direction
+/// (SRS v2 A11 / FR23) does not require a schema migration later.
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  planTier  String   @default("internal") // internal | saas-starter | saas-pro (future)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  brands Brand[]
+  users  User[]
+
+  @@map("organizations")
+}
+
+/// One of the four Agrosaf divisions today; a tenant-scoping unit for
+/// almost all content/campaign/asset data added in later sprints.
+model Brand {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  slug           String   @unique
+  localeDefault  String   @default("en")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  brandAccess  BrandAccess[]
+
+  @@index([organizationId])
+  @@map("brands")
+}
+
+/// A person who can log in. Identity comes from Auth.js (SSO); this
+/// row is created/linked on first login (see AuthService.validateOrCreateUser).
+model User {
+  id             String    @id @default(cuid())
+  organizationId String
+  email          String    @unique
+  name           String
+  authProviderId String? // subject/id from the SSO provider
+  status         UserStatus @default(ACTIVE)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  brandAccess  BrandAccess[]
+
+  @@index([organizationId])
+  @@map("users")
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  EXPIRED // used for time-boxed External Agency/Freelancer accounts (SRS v2 1.4)
+}
+
+/// A named role. Seeded with the 14 roles from the SRS; Super Admin
+/// can create additional custom roles at runtime (FR: extensible RBAC).
+model Role {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  isCustom Boolean @default(false)
+  isOrgWide Boolean @default(false) // true for Super Admin / Marketing Head (not brand-scoped)
+
+  permissions     RolePermission[]
+  brandAccess     BrandAccess[]
+
+  @@map("roles")
+}
+
+/// A single grantable action, e.g. "content:approve", "compliance:review".
+/// Kept as a flat action string rather than a fixed enum so Super Admin
+/// can compose custom roles without a code change.
+model Permission {
+  id     String @id @default(cuid())
+  action String @unique
+  description String?
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+/// Join of User x Brand x Role. This is the core of the "one user can
+/// switch between brands without logging out" requirement: a user's
+/// available brands and their role in each are just rows here.
+model BrandAccess {
+  id      String @id @default(cuid())
+  userId  String
+  brandId String
+  roleId  String
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  role  Role  @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, brandId, roleId])
+  @@index([userId])
+  @@index([brandId])
+  @@map("brand_access")
+}
+
+/// Generic audit trail. Populated by an interceptor for RBAC-sensitive
+/// mutations in Sprint 1; content/approval actions are added to this
+/// same table in later sprints rather than a parallel log.
+model AuditLog {
+  id         String   @id @default(cuid())
+  entityType String
+  entityId   String
+  actorId    String?
+  action     String
+  before     Json?
+  after      Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}

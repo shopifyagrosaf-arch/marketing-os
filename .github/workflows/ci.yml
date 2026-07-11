@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: agrosaf_marketing_os_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/agrosaf_marketing_os_test?schema=public
+      AUTH_SECRET: ci-test-secret-that-is-at-least-32-characters-long
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run prisma:generate --workspace=apps/api
+      - run: npm exec --workspace=apps/api -- prisma migrate deploy
+      - run: npm run lint --workspace=apps/api
+      - run: npm run test --workspace=apps/api
+      - run: npm run test:e2e --workspace=apps/api
+      - run: npm run build --workspace=apps/api
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint --workspace=apps/web
+      - run: npm run test --workspace=apps/web
+      - run: npm run build --workspace=apps/web
+        env:
+          AUTH_SECRET: ci-test-secret-that-is-at-least-32-characters-long
+          NEXT_PUBLIC_API_URL: http://localhost:3001
