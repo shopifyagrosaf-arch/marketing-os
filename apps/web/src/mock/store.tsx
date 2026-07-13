@@ -9,45 +9,49 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { SEED_ASSETS, SEED_CONTENT_REQUESTS, SEED_PERFORMANCE, SEED_TASKS, SEED_USERS } from './seed';
+import {
+  SEED_ASSETS,
+  SEED_BRANDS,
+  SEED_CONTENT_REQUESTS,
+  SEED_PERFORMANCE,
+  SEED_TASKS,
+  SEED_USERS,
+} from './seed';
 import type {
   Asset,
   ApprovalDecision,
   AppData,
+  Brand,
   ContentRequest,
   MockUser,
   PerformanceEntry,
   Task,
 } from './types';
 
-const STORAGE_KEY = 'agrosaf-mvp-data-v1';
+const STORAGE_KEY = 'agrosaf-mvp-data-v2';
 const SESSION_COOKIE = 'mock_user_id';
 
-function loadInitial(): AppData {
-  if (typeof window === 'undefined') {
-    return {
-      users: SEED_USERS,
-      contentRequests: SEED_CONTENT_REQUESTS,
-      tasks: SEED_TASKS,
-      assets: SEED_ASSETS,
-      approvalDecisions: [],
-      performanceEntries: SEED_PERFORMANCE,
-    };
-  }
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as AppData;
-  } catch {
-    // fall through to seed data
-  }
+function seedData(): AppData {
   return {
     users: SEED_USERS,
+    brands: SEED_BRANDS,
     contentRequests: SEED_CONTENT_REQUESTS,
     tasks: SEED_TASKS,
     assets: SEED_ASSETS,
     approvalDecisions: [],
     performanceEntries: SEED_PERFORMANCE,
   };
+}
+
+function loadInitial(): AppData {
+  if (typeof window === 'undefined') return seedData();
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw) as AppData;
+  } catch {
+    // fall through to seed data
+  }
+  return seedData();
 }
 
 function setCookie(name: string, value: string, days = 30) {
@@ -95,6 +99,10 @@ interface MockStoreValue {
   addUser: (input: Omit<MockUser, 'id'>) => MockUser;
   updateUser: (id: string, patch: Partial<MockUser>) => void;
   deleteUser: (id: string) => void;
+
+  addBrand: (input: Omit<Brand, 'id' | 'createdAt'>) => Brand;
+  updateBrand: (id: string, patch: Partial<Brand>) => void;
+  deleteBrand: (id: string) => void;
 }
 
 const MockStoreContext = createContext<MockStoreValue | null>(null);
@@ -221,6 +229,20 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
     setData((d) => ({ ...d, users: d.users.filter((u) => u.id !== id) }));
   }, []);
 
+  const addBrand = useCallback<MockStoreValue['addBrand']>((input) => {
+    const record: Brand = { ...input, id: nextId('b'), createdAt: new Date().toISOString() };
+    setData((d) => ({ ...d, brands: [...d.brands, record] }));
+    return record;
+  }, []);
+
+  const updateBrand = useCallback<MockStoreValue['updateBrand']>((id, patch) => {
+    setData((d) => ({ ...d, brands: d.brands.map((b) => (b.id === id ? { ...b, ...patch } : b)) }));
+  }, []);
+
+  const deleteBrand = useCallback<MockStoreValue['deleteBrand']>((id) => {
+    setData((d) => ({ ...d, brands: d.brands.filter((b) => b.id !== id) }));
+  }, []);
+
   const currentUser = useMemo(
     () => data.users.find((u) => u.id === currentUserId) ?? null,
     [data.users, currentUserId],
@@ -247,6 +269,9 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       addUser,
       updateUser,
       deleteUser,
+      addBrand,
+      updateBrand,
+      deleteBrand,
     }),
     [
       data,
@@ -268,6 +293,9 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       addUser,
       updateUser,
       deleteUser,
+      addBrand,
+      updateBrand,
+      deleteBrand,
     ],
   );
 

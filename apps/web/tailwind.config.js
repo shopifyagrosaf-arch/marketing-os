@@ -56,7 +56,7 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['system-ui', '-apple-system', '"Segoe UI"', 'sans-serif'],
+        sans: ['var(--font-sans)', 'system-ui', '-apple-system', '"Segoe UI"', 'sans-serif'],
       },
       borderRadius: {
         xl: '0.875rem',

@@ -1,6 +1,7 @@
 import { addDays, formatISO, subDays } from 'date-fns';
 import type {
   Asset,
+  Brand,
   ContentRequest,
   MockUser,
   PerformanceEntry,
@@ -19,6 +20,45 @@ export const SEED_USERS: MockUser[] = [
   { id: 'u6', name: 'Imran Sheikh', email: 'imran@agrosaf.com', role: 'Viewer', color: '#eb6834', status: 'invited' },
 ];
 
+export const SEED_BRANDS: Brand[] = [
+  {
+    id: 'b1',
+    name: 'Agrosaf Pharmaceuticals',
+    slug: 'agrosaf-pharma',
+    color: '#2a78d6',
+    status: 'active',
+    description: 'Core pharmaceutical manufacturing and distribution brand.',
+    createdAt: iso(subDays(today, 400)),
+  },
+  {
+    id: 'b2',
+    name: 'Alosafe Pharmacare',
+    slug: 'alosafe-pharmacare',
+    color: '#1baf7a',
+    status: 'active',
+    description: 'Consumer wellness and OTC product line.',
+    createdAt: iso(subDays(today, 380)),
+  },
+  {
+    id: 'b3',
+    name: 'Medizone',
+    slug: 'medizone',
+    color: '#eda100',
+    status: 'active',
+    description: 'Medical devices and diagnostics.',
+    createdAt: iso(subDays(today, 300)),
+  },
+  {
+    id: 'b4',
+    name: 'Hospital Marketing',
+    slug: 'hospital-marketing',
+    color: '#4a3aa7',
+    status: 'active',
+    description: 'Marketing arm for partner hospitals and clinics.',
+    createdAt: iso(subDays(today, 200)),
+  },
+];
+
 export const SEED_CONTENT_REQUESTS: ContentRequest[] = [
   {
     id: 'cr1',
@@ -28,6 +68,7 @@ export const SEED_CONTENT_REQUESTS: ContentRequest[] = [
     channel: 'Instagram',
     priority: 'High',
     status: 'In Review',
+    brandId: 'b1',
     requestedById: 'u3',
     assigneeId: 'u4',
     dueDate: iso(addDays(today, 3)),
@@ -42,6 +83,7 @@ export const SEED_CONTENT_REQUESTS: ContentRequest[] = [
     channel: 'Website',
     priority: 'Medium',
     status: 'Draft',
+    brandId: 'b2',
     requestedById: 'u2',
     assigneeId: 'u5',
     dueDate: iso(addDays(today, 7)),
@@ -56,6 +98,7 @@ export const SEED_CONTENT_REQUESTS: ContentRequest[] = [
     channel: 'Google Business',
     priority: 'Urgent',
     status: 'Submitted',
+    brandId: 'b4',
     requestedById: 'u2',
     assigneeId: 'u4',
     dueDate: iso(addDays(today, 1)),
@@ -70,6 +113,7 @@ export const SEED_CONTENT_REQUESTS: ContentRequest[] = [
     channel: 'Instagram',
     priority: 'Medium',
     status: 'Approved',
+    brandId: 'b2',
     requestedById: 'u3',
     assigneeId: 'u5',
     dueDate: iso(addDays(today, 10)),
@@ -84,6 +128,7 @@ export const SEED_CONTENT_REQUESTS: ContentRequest[] = [
     channel: 'Email',
     priority: 'Low',
     status: 'Published',
+    brandId: 'b1',
     requestedById: 'u2',
     assigneeId: 'u4',
     dueDate: iso(subDays(today, 2)),
@@ -98,6 +143,7 @@ export const SEED_CONTENT_REQUESTS: ContentRequest[] = [
     channel: 'YouTube',
     priority: 'High',
     status: 'Rejected',
+    brandId: 'b3',
     requestedById: 'u3',
     assigneeId: 'u5',
     dueDate: iso(addDays(today, 5)),
@@ -112,6 +158,7 @@ export const SEED_CONTENT_REQUESTS: ContentRequest[] = [
     channel: 'Facebook',
     priority: 'Low',
     status: 'Draft',
+    brandId: 'b1',
     requestedById: 'u4',
     assigneeId: null,
     dueDate: iso(addDays(today, 14)),

@@ -1,27 +1,40 @@
 'use client';
 
 import { Plus } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Field, Input, Select } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
+import { Pagination } from '@/components/ui/Pagination';
+import { SearchInput } from '@/components/ui/SearchInput';
+import { Skeleton, SkeletonStatRow, SkeletonTable } from '@/components/ui/Skeleton';
 import { StatTile } from '@/components/ui/StatTile';
 import { Table, Td, Th, Thead, Tr } from '@/components/ui/Table';
+import { useToast } from '@/components/ui/toast';
 import { PageHeaderBar } from '@/components/shell/PageHeaderBar';
+import { useSimulatedLoading } from '@/lib/useSimulatedLoading';
 import type { Channel } from '@/mock/types';
 import { useMockStore } from '@/mock/store';
 
 const CHANNELS: Channel[] = ['Instagram', 'Facebook', 'LinkedIn', 'Google Business', 'Website', 'Email', 'YouTube'];
+const PAGE_SIZE = 8;
 
 export default function PerformancePage() {
   const { data, addPerformanceEntry, theme } = useMockStore();
+  const loading = useSimulatedLoading();
+  const toast = useToast();
   const gridColor = theme === 'dark' ? '#2c2c2a' : '#e1e0d9';
   const surface = theme === 'dark' ? '#1a1a19' : '#fcfcfb';
   const ink = theme === 'dark' ? '#ffffff' : '#0b0b0b';
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [platformFilter, setPlatformFilter] = useState<Channel | 'All'>('All');
+  const [page, setPage] = useState(1);
+
   const [contentRequestId, setContentRequestId] = useState(data.contentRequests[0]?.id ?? '');
   const [platform, setPlatform] = useState<Channel>('Instagram');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
@@ -56,12 +69,26 @@ export default function PerformancePage() {
     [data.performanceEntries],
   );
 
-  const rows = [...data.performanceEntries].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 12);
+  const filteredRows = useMemo(
+    () =>
+      [...data.performanceEntries]
+        .filter((p) => platformFilter === 'All' || p.platform === platformFilter)
+        .filter((p) => {
+          const title = data.contentRequests.find((cr) => cr.id === p.contentRequestId)?.title ?? '';
+          return title.toLowerCase().includes(search.toLowerCase());
+        })
+        .sort((a, b) => b.date.localeCompare(a.date)),
+    [data.performanceEntries, data.contentRequests, platformFilter, search],
+  );
+
+  useEffect(() => setPage(1), [search, platformFilter]);
+  const pageRows = filteredRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!contentRequestId) return;
     addPerformanceEntry({ contentRequestId, platform, date, reach, likes, comments, shares, clicks });
+    toast.success('Performance entry logged');
     setReach(0);
     setLikes(0);
     setComments(0);
@@ -82,29 +109,38 @@ export default function PerformancePage() {
         }
       />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatTile label="Total reach" value={totals.reach.toLocaleString()} />
-        <StatTile label="Total likes" value={totals.likes.toLocaleString()} />
-        <StatTile label="Total comments" value={totals.comments.toLocaleString()} />
-        <StatTile label="Total clicks" value={totals.clicks.toLocaleString()} />
-      </div>
+      {loading ? (
+        <SkeletonStatRow />
+      ) : (
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <StatTile label="Total reach" value={totals.reach.toLocaleString()} />
+          <StatTile label="Total likes" value={totals.likes.toLocaleString()} />
+          <StatTile label="Total comments" value={totals.comments.toLocaleString()} />
+          <StatTile label="Total clicks" value={totals.clicks.toLocaleString()} />
+        </div>
+      )}
 
       <Card className="mt-4">
         <CardHeader>
           <h2 className="text-sm font-semibold text-ink-primary dark:text-ink-primary-dark">Engagement by platform</h2>
         </CardHeader>
         <CardBody>
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={byPlatform} margin={{ left: -20 }}>
-              <CartesianGrid vertical={false} stroke={gridColor} />
-              <XAxis dataKey="platform" tick={{ fontSize: 11, fill: '#898781' }} axisLine={{ stroke: gridColor }} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#898781' }} axisLine={false} tickLine={false} />
-              <Tooltip
-                contentStyle={{ background: surface, border: `1px solid ${gridColor}`, borderRadius: 8, fontSize: 12, color: ink }}
-              />
-              <Bar dataKey="engagement" fill="#2a78d6" radius={[4, 4, 0, 0]} maxBarSize={48} />
-            </BarChart>
-          </ResponsiveContainer>
+          {loading ? (
+            <Skeleton className="h-[260px] w-full" />
+          ) : (
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={byPlatform} margin={{ left: -20 }}>
+                <CartesianGrid vertical={false} stroke={gridColor} />
+                <XAxis dataKey="platform" tick={{ fontSize: 11, fill: '#898781' }} axisLine={{ stroke: gridColor }} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: '#898781' }} axisLine={false} tickLine={false} />
+                <Tooltip
+                  cursor={{ fill: theme === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(11,11,11,0.03)' }}
+                  contentStyle={{ background: surface, border: `1px solid ${gridColor}`, borderRadius: 8, fontSize: 12, color: ink }}
+                />
+                <Bar dataKey="engagement" fill="#2a78d6" radius={[4, 4, 0, 0]} maxBarSize={48} isAnimationActive animationDuration={500} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </CardBody>
       </Card>
 
@@ -113,32 +149,55 @@ export default function PerformancePage() {
           <h2 className="text-sm font-semibold text-ink-primary dark:text-ink-primary-dark">Entries</h2>
         </CardHeader>
         <CardBody className="pt-0">
-          <Table>
-            <Thead>
-              <tr>
-                <Th>Date</Th>
-                <Th>Content</Th>
-                <Th>Platform</Th>
-                <Th>Reach</Th>
-                <Th>Likes</Th>
-                <Th>Comments</Th>
-                <Th>Clicks</Th>
-              </tr>
-            </Thead>
-            <tbody>
-              {rows.map((p) => (
-                <Tr key={p.id}>
-                  <Td className="tabular-nums">{p.date}</Td>
-                  <Td className="max-w-[220px] truncate">{data.contentRequests.find((cr) => cr.id === p.contentRequestId)?.title ?? '—'}</Td>
-                  <Td>{p.platform}</Td>
-                  <Td className="tabular-nums">{p.reach.toLocaleString()}</Td>
-                  <Td className="tabular-nums">{p.likes}</Td>
-                  <Td className="tabular-nums">{p.comments}</Td>
-                  <Td className="tabular-nums">{p.clicks}</Td>
-                </Tr>
+          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <SearchInput placeholder="Search by content title…" value={search} onChange={(e) => setSearch(e.target.value)} className="sm:max-w-xs" />
+            <Select value={platformFilter} onChange={(e) => setPlatformFilter(e.target.value as Channel | 'All')} className="sm:w-44">
+              <option value="All">All platforms</option>
+              {CHANNELS.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
-            </tbody>
-          </Table>
+            </Select>
+          </div>
+
+          {loading ? (
+            <SkeletonTable rows={6} cols={7} />
+          ) : filteredRows.length === 0 ? (
+            <EmptyState title="No entries match your filters." />
+          ) : (
+            <>
+              <Table>
+                <Thead>
+                  <tr>
+                    <Th>Date</Th>
+                    <Th>Content</Th>
+                    <Th>Platform</Th>
+                    <Th>Reach</Th>
+                    <Th>Likes</Th>
+                    <Th>Comments</Th>
+                    <Th>Clicks</Th>
+                  </tr>
+                </Thead>
+                <tbody>
+                  {pageRows.map((p) => (
+                    <Tr key={p.id}>
+                      <Td className="tabular-nums">{p.date}</Td>
+                      <Td className="max-w-[220px] truncate">
+                        {data.contentRequests.find((cr) => cr.id === p.contentRequestId)?.title ?? '—'}
+                      </Td>
+                      <Td>{p.platform}</Td>
+                      <Td className="tabular-nums">{p.reach.toLocaleString()}</Td>
+                      <Td className="tabular-nums">{p.likes}</Td>
+                      <Td className="tabular-nums">{p.comments}</Td>
+                      <Td className="tabular-nums">{p.clicks}</Td>
+                    </Tr>
+                  ))}
+                </tbody>
+              </Table>
+              <Pagination page={page} pageSize={PAGE_SIZE} total={filteredRows.length} onPageChange={setPage} />
+            </>
+          )}
         </CardBody>
       </Card>
 

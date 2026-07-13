@@ -5,8 +5,9 @@ planning, AI-assisted drafting, brand/compliance approval, publishing, and
 analytics across the group's four brands (Agrosaf Pharmaceuticals, Alosafe
 Pharmacare, Medizone, Hospital Marketing), operated by one shared marketing team.
 
-**Status:** UI Preview — a mock-data-only frontend covering 11 internal
-tool modules, tagged `v0.3.0-ui-preview`, built for same-day review. This
+**Status:** UI Preview — a mock-data-only, production-quality-styled
+frontend covering 12 internal tool modules, tagged `v0.3.0-ui-preview`,
+built for review. This
 pauses (does not delete) the multi-tenant NestJS/Postgres backend and
 design system from Sprints 1–3A/3B (tagged `v0.3.0-sprint3`) — see
 [ADR 0011](docs/adr/0011-ui-preview-mock-data-pivot.md) and

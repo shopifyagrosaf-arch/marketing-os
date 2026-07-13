@@ -19,14 +19,20 @@ backend and design system (`v0.3.0-sprint3`) are paused, not deleted.
   session), Dashboard (charts via Recharts, dataviz-skill palette), Content
   Requests (list/create/edit/transitions), Task Board (Kanban with
   drag-and-drop), Content Calendar (month grid), Asset Library, Approvals,
-  Performance Dashboard (manual entry + charts), User Management, Settings.
+  Performance Dashboard (manual entry + charts), User Management, Brands,
+  Settings — 12 pages total, see `docs/SPRINT_UI_PREVIEW.md`.
 - `apps/web/src/mock/` — in-memory + `localStorage`-persisted data layer
-  (`MockDataProvider`/`useMockStore`) replacing all backend calls in this build.
-- `apps/web/src/components/ui/` — a small Tailwind-based primitive set
-  (Button, Card, Badge, Input/Select/Textarea, Table, Modal, Avatar,
-  EmptyState, SearchInput, StatTile).
+  (`MockDataProvider`/`useMockStore`) replacing all backend calls in this
+  build, including a `Brand` entity every Content Request now references.
+- `apps/web/src/components/ui/` — a Tailwind-based primitive set (Button,
+  Card, Badge, Input/Select/Textarea, Table, Modal, Drawer, ConfirmDialog,
+  Toast, Pagination, Skeleton, Avatar, EmptyState, SearchInput, StatTile).
 - Cookie-based mock session (`mock_user_id`) gating navigation in
   `middleware.ts`, replacing the Auth.js-backed check for this build.
+- Production-quality pass: toast notifications and confirmation dialogs on
+  every mutation, slide-in detail drawers, pagination on every table/grid,
+  simulated loading + skeleton states, framer-motion animations (modals,
+  drawers, toasts, route transitions), Inter typeface.
 
 ### Changed
 - `apps/web/src/app/layout.tsx`, `(dashboard)/layout.tsx`,

@@ -14,8 +14,15 @@ body {
   height: 100%;
 }
 
+body,
+body * {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
 body {
-  @apply bg-surface-page text-ink-primary antialiased;
+  @apply bg-surface-page text-ink-primary antialiased font-sans;
 }
 .dark body {
   @apply bg-surface-dark-page text-ink-primary-dark;

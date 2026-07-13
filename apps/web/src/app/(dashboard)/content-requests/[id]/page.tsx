@@ -7,8 +7,13 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody } from '@/components/ui/Card';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Field, Input, Select, Textarea } from '@/components/ui/Input';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { useToast } from '@/components/ui/toast';
 import { PageHeaderBar } from '@/components/shell/PageHeaderBar';
+import { useSimulatedLoading } from '@/lib/useSimulatedLoading';
 import { CONTENT_STATUS_TONE, PRIORITY_TONE } from '@/lib/status';
 import type { ContentRequestStatus } from '@/mock/types';
 import { useMockStore } from '@/mock/store';
@@ -26,45 +31,89 @@ export default function ContentRequestDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const { data, updateContentRequest, deleteContentRequest } = useMockStore();
+  const loading = useSimulatedLoading(350);
+  const toast = useToast();
+  const confirm = useConfirm();
   const request = data.contentRequests.find((cr) => cr.id === params.id);
 
   const [title, setTitle] = useState(request?.title ?? '');
   const [description, setDescription] = useState(request?.description ?? '');
   const [assigneeId, setAssigneeId] = useState(request?.assigneeId ?? '');
 
+  const BackLink = (
+    <Link
+      href="/content-requests"
+      className="mb-3 inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink-primary dark:hover:text-ink-primary-dark"
+    >
+      <ArrowLeft className="h-3.5 w-3.5" /> Content Requests
+    </Link>
+  );
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-3xl">
+        {BackLink}
+        <Skeleton className="mb-5 h-7 w-2/3" />
+        <Skeleton className="mb-4 h-28 w-full rounded-xl" />
+        <Skeleton className="h-56 w-full rounded-xl" />
+      </div>
+    );
+  }
+
   if (!request) {
     return (
-      <div>
-        <PageHeaderBar title="Content request not found" />
-        <Link href="/content-requests" className="text-sm text-brand-600 hover:underline dark:text-brand-400">
-          Back to Content Requests
-        </Link>
+      <div className="mx-auto max-w-3xl">
+        {BackLink}
+        <EmptyState title="Content request not found" description="It may have been deleted." />
       </div>
     );
   }
 
   const requester = data.users.find((u) => u.id === request.requestedById);
+  const brand = data.brands.find((b) => b.id === request.brandId);
 
   const saveEdits = (e: React.FormEvent) => {
     e.preventDefault();
     updateContentRequest(request.id, { title, description, assigneeId: assigneeId || null });
+    toast.success('Changes saved');
+  };
+
+  const transition = (status: ContentRequestStatus) => {
+    updateContentRequest(request.id, { status });
+    toast.success(`Status updated to ${status}`);
+  };
+
+  const remove = async () => {
+    const ok = await confirm({
+      title: 'Delete this content request?',
+      description: `"${request.title}" will be permanently removed.`,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
+    deleteContentRequest(request.id);
+    toast.success('Content request deleted');
+    router.push('/content-requests');
   };
 
   return (
     <div className="mx-auto max-w-3xl">
-      <Link
-        href="/content-requests"
-        className="mb-3 inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink-primary dark:hover:text-ink-primary-dark"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" /> Content Requests
-      </Link>
+      {BackLink}
       <PageHeaderBar
         title={request.title}
         actions={<Badge tone={CONTENT_STATUS_TONE[request.status]}>{request.status}</Badge>}
       />
 
       <Card className="mb-4">
-        <CardBody className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
+        <CardBody className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-5">
+          <div>
+            <p className="text-xs text-ink-muted">Brand</p>
+            {brand && (
+              <p className="flex items-center gap-1.5 font-medium text-ink-primary dark:text-ink-primary-dark">
+                <span className="h-2 w-2 rounded-full" style={{ background: brand.color }} />
+                {brand.name}
+              </p>
+            )}
+          </div>
           <div>
             <p className="text-xs text-ink-muted">Type</p>
             <p className="font-medium text-ink-primary dark:text-ink-primary-dark">{request.contentType}</p>
@@ -116,17 +165,11 @@ export default function ContentRequestDetailPage() {
 
       <div className="flex flex-wrap gap-2">
         {NEXT_ACTIONS[request.status].map((action) => (
-          <Button key={action.status} variant={action.variant ?? 'primary'} onClick={() => updateContentRequest(request.id, { status: action.status })}>
+          <Button key={action.status} variant={action.variant ?? 'primary'} onClick={() => transition(action.status)}>
             {action.label}
           </Button>
         ))}
-        <Button
-          variant="danger"
-          onClick={() => {
-            deleteContentRequest(request.id);
-            router.push('/content-requests');
-          }}
-        >
+        <Button variant="danger" onClick={remove}>
           Delete
         </Button>
       </div>

@@ -1,14 +1,15 @@
 'use client';
 
 import { CheckSquare, Clock, FileText, TrendingUp } from 'lucide-react';
+import Link from 'next/link';
 import { useMemo } from 'react';
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -16,16 +17,23 @@ import {
 } from 'recharts';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
+import { SkeletonStatRow } from '@/components/ui/Skeleton';
 import { StatTile } from '@/components/ui/StatTile';
 import { PageHeaderBar } from '@/components/shell/PageHeaderBar';
+import { useSimulatedLoading } from '@/lib/useSimulatedLoading';
 import { CONTENT_STATUS_COLOR, CONTENT_STATUS_TONE } from '@/lib/status';
 import type { ContentRequestStatus } from '@/mock/types';
 import { useMockStore } from '@/mock/store';
 
 const STATUS_ORDER: ContentRequestStatus[] = ['Draft', 'Submitted', 'In Review', 'Approved', 'Published', 'Rejected'];
 
+function formatCompact(n: number) {
+  return new Intl.NumberFormat('en', { notation: 'compact' }).format(n);
+}
+
 export default function DashboardPage() {
   const { data, theme } = useMockStore();
+  const loading = useSimulatedLoading();
   const axisColor = '#898781';
   const gridColor = theme === 'dark' ? '#2c2c2a' : '#e1e0d9';
   const surface = theme === 'dark' ? '#1a1a19' : '#fcfcfb';
@@ -61,17 +69,32 @@ export default function DashboardPage() {
     <div>
       <PageHeaderBar title="Dashboard" description="Overview of content operations across all brands." />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatTile label="Open requests" value={openRequests} icon={<FileText className="h-4 w-4" />} />
-        <StatTile label="Pending approvals" value={pendingApprovals} icon={<CheckSquare className="h-4 w-4" />} />
-        <StatTile label="Tasks in flight" value={tasksInFlight} icon={<Clock className="h-4 w-4" />} />
-        <StatTile
-          label="Total reach (14d)"
-          value={totalReach.toLocaleString()}
-          delta="+12.4% vs prior period"
-          icon={<TrendingUp className="h-4 w-4" />}
-        />
-      </div>
+      {loading ? (
+        <SkeletonStatRow />
+      ) : (
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <StatTile
+            label="Open requests"
+            value={openRequests}
+            icon={<FileText className="h-4 w-4" />}
+            href="/content-requests"
+          />
+          <StatTile
+            label="Pending approvals"
+            value={pendingApprovals}
+            icon={<CheckSquare className="h-4 w-4" />}
+            href="/approvals"
+          />
+          <StatTile label="Tasks in flight" value={tasksInFlight} icon={<Clock className="h-4 w-4" />} href="/tasks" />
+          <StatTile
+            label="Total reach (14d)"
+            value={formatCompact(totalReach)}
+            delta="+12.4% vs prior period"
+            icon={<TrendingUp className="h-4 w-4" />}
+            href="/performance"
+          />
+        </div>
+      )}
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-5">
         <Card className="lg:col-span-2">
@@ -103,7 +126,7 @@ export default function DashboardPage() {
                     color: ink,
                   }}
                 />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={36}>
+                <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={36} isAnimationActive animationDuration={500}>
                   {byStatus.map((entry) => (
                     <Cell key={entry.status} fill={CONTENT_STATUS_COLOR[entry.status]} />
                   ))}
@@ -119,10 +142,16 @@ export default function DashboardPage() {
           </CardHeader>
           <CardBody>
             <ResponsiveContainer width="100%" height={240}>
-              <LineChart data={reachTrend} margin={{ left: -20 }}>
+              <AreaChart data={reachTrend} margin={{ left: -20 }}>
+                <defs>
+                  <linearGradient id="reachFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#2a78d6" stopOpacity={0.35} />
+                    <stop offset="100%" stopColor="#2a78d6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid vertical={false} stroke={gridColor} />
                 <XAxis dataKey="date" tick={{ fontSize: 11, fill: axisColor }} axisLine={{ stroke: gridColor }} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: axisColor }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: axisColor }} axisLine={false} tickLine={false} tickFormatter={formatCompact} />
                 <Tooltip
                   contentStyle={{
                     background: surface,
@@ -131,9 +160,19 @@ export default function DashboardPage() {
                     fontSize: 12,
                     color: ink,
                   }}
+                  formatter={(value) => [Number(value ?? 0).toLocaleString(), 'Reach']}
                 />
-                <Line type="monotone" dataKey="reach" stroke="#2a78d6" strokeWidth={2} dot={false} />
-              </LineChart>
+                <Area
+                  type="monotone"
+                  dataKey="reach"
+                  stroke="#2a78d6"
+                  strokeWidth={2.5}
+                  fill="url(#reachFill)"
+                  dot={false}
+                  isAnimationActive
+                  animationDuration={600}
+                />
+              </AreaChart>
             </ResponsiveContainer>
           </CardBody>
         </Card>
@@ -143,18 +182,19 @@ export default function DashboardPage() {
         <CardHeader>
           <h2 className="text-sm font-semibold text-ink-primary dark:text-ink-primary-dark">Recent activity</h2>
         </CardHeader>
-        <CardBody className="space-y-2">
+        <CardBody className="space-y-1">
           {recent.map((cr) => (
-            <div
+            <Link
               key={cr.id}
-              className="flex items-center justify-between gap-3 rounded-lg px-2 py-2 hover:bg-surface-page dark:hover:bg-white/5"
+              href={`/content-requests/${cr.id}`}
+              className="flex items-center justify-between gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-surface-page dark:hover:bg-white/5"
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-ink-primary dark:text-ink-primary-dark">{cr.title}</p>
                 <p className="text-xs text-ink-muted">Updated {cr.updatedAt}</p>
               </div>
               <Badge tone={CONTENT_STATUS_TONE[cr.status]}>{cr.status}</Badge>
-            </div>
+            </Link>
           ))}
         </CardBody>
       </Card>

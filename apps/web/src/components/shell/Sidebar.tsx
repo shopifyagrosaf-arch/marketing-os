@@ -2,6 +2,7 @@
 
 import {
   BarChart3,
+  Building2,
   CalendarDays,
   CheckSquare,
   Columns3,
@@ -28,6 +29,7 @@ const NAV = [
 
 const ADMIN_NAV = [
   { href: '/users', label: 'User Management', icon: Users },
+  { href: '/brands', label: 'Brands', icon: Building2 },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 

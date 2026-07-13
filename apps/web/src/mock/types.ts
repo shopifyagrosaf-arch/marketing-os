@@ -1,5 +1,15 @@
 export type Role = 'Admin' | 'Marketing Head' | 'Brand Manager' | 'Content Writer' | 'Viewer';
 
+export interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+  color: string;
+  status: 'active' | 'archived';
+  description: string;
+  createdAt: string;
+}
+
 export interface MockUser {
   id: string;
   name: string;
@@ -28,6 +38,7 @@ export interface ContentRequest {
   channel: Channel;
   priority: Priority;
   status: ContentRequestStatus;
+  brandId: string;
   requestedById: string;
   assigneeId: string | null;
   dueDate: string; // ISO date
@@ -85,6 +96,7 @@ export interface PerformanceEntry {
 
 export interface AppData {
   users: MockUser[];
+  brands: Brand[];
   contentRequests: ContentRequest[];
   tasks: Task[];
   assets: Asset[];

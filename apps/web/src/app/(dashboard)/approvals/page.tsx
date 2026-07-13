@@ -1,28 +1,53 @@
 'use client';
 
 import { Check, X } from 'lucide-react';
+import Link from 'next/link';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody } from '@/components/ui/Card';
+import { useConfirm } from '@/components/ui/ConfirmDialog';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Textarea } from '@/components/ui/Input';
+import { SkeletonCards } from '@/components/ui/Skeleton';
+import { useToast } from '@/components/ui/toast';
 import { PageHeaderBar } from '@/components/shell/PageHeaderBar';
+import { useSimulatedLoading } from '@/lib/useSimulatedLoading';
 import { CONTENT_STATUS_TONE, PRIORITY_TONE } from '@/lib/status';
 import { useMockStore } from '@/mock/store';
 
 export default function ApprovalsPage() {
   const { data, decideApproval } = useMockStore();
+  const loading = useSimulatedLoading();
+  const toast = useToast();
+  const confirm = useConfirm();
   const pending = data.contentRequests.filter((cr) => cr.status === 'Submitted' || cr.status === 'In Review');
   const [comments, setComments] = useState<Record<string, string>>({});
 
   const decisionHistory = [...data.approvalDecisions].sort((a, b) => b.decidedAt.localeCompare(a.decidedAt)).slice(0, 6);
 
+  const decide = async (id: string, title: string, decision: 'approved' | 'rejected') => {
+    const ok = await confirm({
+      title: decision === 'approved' ? 'Approve this request?' : 'Reject this request?',
+      description: `"${title}" will be marked as ${decision === 'approved' ? 'Approved' : 'Rejected'}.`,
+      confirmLabel: decision === 'approved' ? 'Approve' : 'Reject',
+      variant: decision === 'approved' ? 'primary' : 'danger',
+    });
+    if (!ok) return;
+    decideApproval(id, decision, comments[id] ?? '');
+    toast[decision === 'approved' ? 'success' : 'warning'](
+      decision === 'approved' ? 'Request approved' : 'Request rejected',
+      title,
+    );
+  };
+
   return (
     <div>
       <PageHeaderBar title="Approvals" description="Review submitted content before it moves forward." />
 
-      {pending.length === 0 ? (
+      {loading ? (
+        <SkeletonCards count={4} />
+      ) : pending.length === 0 ? (
         <EmptyState title="Nothing waiting for approval." description="Submitted requests will appear here." />
       ) : (
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
@@ -32,8 +57,13 @@ export default function ApprovalsPage() {
               <Card key={cr.id}>
                 <CardBody>
                   <div className="mb-2 flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-sm font-semibold text-ink-primary dark:text-ink-primary-dark">{cr.title}</p>
+                    <div className="min-w-0">
+                      <Link
+                        href={`/content-requests/${cr.id}`}
+                        className="truncate text-sm font-semibold text-ink-primary hover:underline dark:text-ink-primary-dark"
+                      >
+                        {cr.title}
+                      </Link>
                       <p className="text-xs text-ink-muted">
                         {cr.contentType} &middot; {cr.channel} &middot; requested by {requester?.name ?? '—'}
                       </p>
@@ -52,10 +82,10 @@ export default function ApprovalsPage() {
                     className="mb-3"
                   />
                   <div className="flex gap-2">
-                    <Button onClick={() => decideApproval(cr.id, 'approved', comments[cr.id] ?? '')}>
+                    <Button onClick={() => decide(cr.id, cr.title, 'approved')}>
                       <Check className="h-4 w-4" /> Approve
                     </Button>
-                    <Button variant="danger" onClick={() => decideApproval(cr.id, 'rejected', comments[cr.id] ?? '')}>
+                    <Button variant="danger" onClick={() => decide(cr.id, cr.title, 'rejected')}>
                       <X className="h-4 w-4" /> Reject
                     </Button>
                   </div>
