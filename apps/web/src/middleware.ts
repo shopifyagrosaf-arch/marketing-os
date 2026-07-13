@@ -1,22 +1,25 @@
-import { auth } from '@/lib/auth';
+import { NextResponse, type NextRequest } from 'next/server';
 
 /**
- * Redirects unauthenticated visitors to /login for every route except the
- * login page and Next.js internals/API routes (matcher below). The proxy
- * route (api/proxy/**) additionally re-checks auth server-side per request
- * (lib/api-token.ts) — this middleware alone is not the security boundary
- * for API calls, only for page navigation.
+ * UI-preview build: gates page navigation on the mock-session cookie
+ * (`mock_user_id`, set by the mock login page — see src/mock/store.tsx)
+ * instead of a real Auth.js session. This is a placeholder, not a security
+ * boundary — there is no backend behind this build yet (see docs/SPRINT_UI_PREVIEW.md).
  */
-export default auth((req) => {
-  const isLoggedIn = !!req.auth;
-  const isLoginPage = req.nextUrl.pathname.startsWith('/login');
+export function middleware(request: NextRequest) {
+  const isLoggedIn = !!request.cookies.get('mock_user_id')?.value;
+  const isLoginPage = request.nextUrl.pathname.startsWith('/login');
 
   if (!isLoggedIn && !isLoginPage) {
-    const loginUrl = new URL('/login', req.nextUrl);
-    loginUrl.searchParams.set('callbackUrl', req.nextUrl.pathname);
-    return Response.redirect(loginUrl);
+    const loginUrl = new URL('/login', request.nextUrl);
+    loginUrl.searchParams.set('callbackUrl', request.nextUrl.pathname);
+    return NextResponse.redirect(loginUrl);
   }
-});
+
+  if (isLoggedIn && isLoginPage) {
+    return NextResponse.redirect(new URL('/', request.nextUrl));
+  }
+}
 
 export const config = {
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],

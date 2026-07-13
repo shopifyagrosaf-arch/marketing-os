@@ -5,10 +5,14 @@ planning, AI-assisted drafting, brand/compliance approval, publishing, and
 analytics across the group's four brands (Agrosaf Pharmaceuticals, Alosafe
 Pharmacare, Medizone, Hospital Marketing), operated by one shared marketing team.
 
-**Status:** Sprint 3B (Content Request Intake & Workflow Engine), built on
-Sprint 3A's Design System & Admin UI Foundation, complete — tagged
-`v0.3.0-sprint3`. See [`ROADMAP.md`](ROADMAP.md) for what's next and
-[`CHANGELOG.md`](CHANGELOG.md) for release history.
+**Status:** UI Preview — a mock-data-only frontend covering 11 internal
+tool modules, tagged `v0.3.0-ui-preview`, built for same-day review. This
+pauses (does not delete) the multi-tenant NestJS/Postgres backend and
+design system from Sprints 1–3A/3B (tagged `v0.3.0-sprint3`) — see
+[ADR 0011](docs/adr/0011-ui-preview-mock-data-pivot.md) and
+[`docs/SPRINT_UI_PREVIEW.md`](docs/SPRINT_UI_PREVIEW.md) for the pivot
+rationale and current scope. See [`ROADMAP.md`](ROADMAP.md) for what's next
+and [`CHANGELOG.md`](CHANGELOG.md) for release history.
 
 ## Documentation
 
@@ -20,7 +24,8 @@ Sprint 3A's Design System & Admin UI Foundation, complete — tagged
 - [`docs/adr/`](docs/adr/) — Architecture Decision Records (the *why* behind
   each significant technical choice)
 - [`docs/FOLDER_STRUCTURE.md`](docs/FOLDER_STRUCTURE.md) — annotated repo tree
-- [`docs/SPRINT_1.md`](docs/SPRINT_1.md) / [`docs/SPRINT_2.md`](docs/SPRINT_2.md) / [`docs/SPRINT_3A.md`](docs/SPRINT_3A.md) / [`docs/SPRINT_3B.md`](docs/SPRINT_3B.md) — per-sprint scope, endpoints, and review findings
+- [`docs/SPRINT_1.md`](docs/SPRINT_1.md) / [`docs/SPRINT_2.md`](docs/SPRINT_2.md) / [`docs/SPRINT_3A.md`](docs/SPRINT_3A.md) / [`docs/SPRINT_3B.md`](docs/SPRINT_3B.md) — per-sprint scope, endpoints, and review findings (the paused backend/design-system path)
+- [`docs/SPRINT_UI_PREVIEW.md`](docs/SPRINT_UI_PREVIEW.md) — the current mock-data UI build: scope, modules, and what's dormant
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — branching, commit, and review conventions
 - [`CHANGELOG.md`](CHANGELOG.md) — release history (Keep a Changelog format)
 - [`LICENSE`](LICENSE) — MIT
@@ -40,7 +45,21 @@ docker/
 docs/                  Architecture & sprint documentation
 ```
 
-## Prerequisites
+## Running the current UI Preview
+
+The steps below (`docker compose`, Postgres, migrations, seed) are for the
+paused backend/Sprint 1–3 path. The current UI Preview build needs none of
+that — it's mock data only:
+
+```bash
+npm install
+npm run dev --workspace=apps/web   # http://localhost:3000
+```
+
+Sign in as any seeded user on the login screen (no password/SSO). See
+[`docs/SPRINT_UI_PREVIEW.md`](docs/SPRINT_UI_PREVIEW.md) for details.
+
+## Prerequisites (backend path — currently paused)
 
 - Node.js >= 20
 - npm >= 10 (workspaces)

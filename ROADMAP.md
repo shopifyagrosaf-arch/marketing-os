@@ -6,6 +6,18 @@ status column as each sprint closes — this file reflects what's actually
 shipped, not what was originally planned; if a sprint's real scope diverges
 from what's listed here, this file is what should change, not history.
 
+## Pivot (2026-07-13): UI Preview
+
+Mid-Sprint-4, priorities changed: ship a mock-data-only internal tool
+covering 11 modules the same day, deferring backend integration until the
+UI is reviewed and approved. See
+[ADR 0011](docs/adr/0011-ui-preview-mock-data-pivot.md) and
+[`docs/SPRINT_UI_PREVIEW.md`](docs/SPRINT_UI_PREVIEW.md). The phased plan
+below (Sprints 4–10, multi-tenant SaaS ambition) is **paused, not
+cancelled** — it resumes from `v0.3.0-sprint3` once the UI is approved and
+a backend-integration decision is made (keep the NestJS/Postgres backend
+already built, or re-platform, per ADR 0011's consequences).
+
 ## Phase 1 — MVP (current)
 
 Core content workflow, manual publishing/analytics, AI drafting (Mode 1),

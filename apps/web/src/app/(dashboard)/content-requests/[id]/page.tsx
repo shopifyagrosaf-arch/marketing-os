@@ -1,166 +1,134 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { Alert, Badge, Button, Card, FormField, Spinner, Textarea, TextInput } from '@agrosaf/ui';
-import { apiFetch } from '@/lib/api-client';
-import { useBrand } from '@/components/brand-switcher/BrandProvider';
-import { PageHeader } from '@/components/shell/PageHeader';
+import { ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card, CardBody } from '@/components/ui/Card';
+import { Field, Input, Select, Textarea } from '@/components/ui/Input';
+import { PageHeaderBar } from '@/components/shell/PageHeaderBar';
+import { CONTENT_STATUS_TONE, PRIORITY_TONE } from '@/lib/status';
+import type { ContentRequestStatus } from '@/mock/types';
+import { useMockStore } from '@/mock/store';
 
-type ContentRequestStatus = 'DRAFT' | 'SUBMITTED' | 'CANCELLED';
-
-interface ContentRequest {
-  id: string;
-  title: string;
-  description: string | null;
-  contentType: string;
-  channel: string | null;
-  status: ContentRequestStatus;
-  dueDate: string | null;
-}
-
-const STATUS_TONE: Record<ContentRequestStatus, 'neutral' | 'info' | 'danger'> = {
-  DRAFT: 'neutral',
-  SUBMITTED: 'info',
-  CANCELLED: 'danger',
-};
-
-/** Which status a DRAFT/SUBMITTED request can transition to next — mirrors CONTENT_REQUEST_TRANSITIONS on the API. */
-const NEXT_ACTIONS: Record<ContentRequestStatus, { label: string; status: ContentRequestStatus }[]> = {
-  DRAFT: [
-    { label: 'Submit', status: 'SUBMITTED' },
-    { label: 'Cancel', status: 'CANCELLED' },
-  ],
-  SUBMITTED: [{ label: 'Withdraw', status: 'CANCELLED' }],
-  CANCELLED: [],
+const NEXT_ACTIONS: Record<ContentRequestStatus, { label: string; status: ContentRequestStatus; variant?: 'primary' | 'danger' }[]> = {
+  Draft: [{ label: 'Submit for review', status: 'Submitted' }],
+  Submitted: [{ label: 'Move to In Review', status: 'In Review' }],
+  'In Review': [],
+  Approved: [{ label: 'Mark as Published', status: 'Published' }],
+  Rejected: [{ label: 'Move back to Draft', status: 'Draft' }],
+  Published: [],
 };
 
 export default function ContentRequestDetailPage() {
   const params = useParams<{ id: string }>();
-  const { selectedBrandId } = useBrand();
-  const [request, setRequest] = useState<ContentRequest | null>(null);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const { data, updateContentRequest, deleteContentRequest } = useMockStore();
+  const request = data.contentRequests.find((cr) => cr.id === params.id);
 
-  const load = () => {
-    if (!selectedBrandId) return;
-    apiFetch<ContentRequest>(`content-requests/${params.id}`, { brandId: selectedBrandId })
-      .then((cr) => {
-        setRequest(cr);
-        setTitle(cr.title);
-        setDescription(cr.description ?? '');
-      })
-      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load content request.'));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  };
+  const [title, setTitle] = useState(request?.title ?? '');
+  const [description, setDescription] = useState(request?.description ?? '');
+  const [assigneeId, setAssigneeId] = useState(request?.assigneeId ?? '');
 
-  useEffect(load, [selectedBrandId, params.id]);
-
-  const saveEdits = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    if (!selectedBrandId) return;
-    try {
-      await apiFetch(`content-requests/${params.id}`, {
-        method: 'PATCH',
-        body: { title, description: description || undefined },
-        brandId: selectedBrandId,
-      });
-      load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save changes.');
-    }
-  };
-
-  const transition = async (status: ContentRequestStatus) => {
-    setError(null);
-    if (!selectedBrandId) return;
-    try {
-      await apiFetch(`content-requests/${params.id}/status`, {
-        method: 'PATCH',
-        body: { status },
-        brandId: selectedBrandId,
-      });
-      load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to update status.');
-    }
-  };
-
-  if (!selectedBrandId) {
+  if (!request) {
     return (
       <div>
-        <PageHeader title="Content Request" />
-        <p>Select a brand to continue.</p>
+        <PageHeaderBar title="Content request not found" />
+        <Link href="/content-requests" className="text-sm text-brand-600 hover:underline dark:text-brand-400">
+          Back to Content Requests
+        </Link>
       </div>
     );
   }
 
-  if (!request) return <Spinner label="Loading content request…" />;
+  const requester = data.users.find((u) => u.id === request.requestedById);
+
+  const saveEdits = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateContentRequest(request.id, { title, description, assigneeId: assigneeId || null });
+  };
 
   return (
-    <div>
-      <PageHeader
+    <div className="mx-auto max-w-3xl">
+      <Link
+        href="/content-requests"
+        className="mb-3 inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink-primary dark:hover:text-ink-primary-dark"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" /> Content Requests
+      </Link>
+      <PageHeaderBar
         title={request.title}
-        actions={<Badge tone={STATUS_TONE[request.status]}>{request.status}</Badge>}
+        actions={<Badge tone={CONTENT_STATUS_TONE[request.status]}>{request.status}</Badge>}
       />
-      {error && (
-        <Alert tone="error" style={{ marginBottom: '1rem' }}>
-          {error}
-        </Alert>
-      )}
 
-      <Card style={{ maxWidth: 560, marginBottom: '1.5rem' }}>
-        <p>
-          <strong>Type:</strong> {request.contentType}
-        </p>
-        <p>
-          <strong>Channel:</strong> {request.channel ?? '—'}
-        </p>
-        <p>
-          <strong>Due date:</strong> {request.dueDate ? new Date(request.dueDate).toLocaleDateString() : '—'}
-        </p>
+      <Card className="mb-4">
+        <CardBody className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
+          <div>
+            <p className="text-xs text-ink-muted">Type</p>
+            <p className="font-medium text-ink-primary dark:text-ink-primary-dark">{request.contentType}</p>
+          </div>
+          <div>
+            <p className="text-xs text-ink-muted">Channel</p>
+            <p className="font-medium text-ink-primary dark:text-ink-primary-dark">{request.channel}</p>
+          </div>
+          <div>
+            <p className="text-xs text-ink-muted">Priority</p>
+            <Badge tone={PRIORITY_TONE[request.priority]}>{request.priority}</Badge>
+          </div>
+          <div>
+            <p className="text-xs text-ink-muted">Due date</p>
+            <p className="tabular-nums font-medium text-ink-primary dark:text-ink-primary-dark">{request.dueDate}</p>
+          </div>
+          <div>
+            <p className="text-xs text-ink-muted">Requested by</p>
+            <p className="font-medium text-ink-primary dark:text-ink-primary-dark">{requester?.name ?? '—'}</p>
+          </div>
+        </CardBody>
       </Card>
 
-      {request.status === 'DRAFT' && (
-        <form
-          onSubmit={saveEdits}
-          style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: 480, marginBottom: '1.5rem' }}
-        >
-          <FormField label="Title" htmlFor="cr-edit-title">
-            <TextInput
-              id="cr-edit-title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-            />
-          </FormField>
-          <FormField label="Description" htmlFor="cr-edit-description">
-            <Textarea
-              id="cr-edit-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-            />
-          </FormField>
-          <Button type="submit" variant="secondary" style={{ alignSelf: 'flex-start' }}>
-            Save changes
-          </Button>
-        </form>
-      )}
+      <Card className="mb-4">
+        <CardBody>
+          <form onSubmit={saveEdits} className="space-y-4">
+            <Field label="Title">
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
+            </Field>
+            <Field label="Description">
+              <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} />
+            </Field>
+            <Field label="Assignee">
+              <Select value={assigneeId ?? ''} onChange={(e) => setAssigneeId(e.target.value)}>
+                <option value="">Unassigned</option>
+                {data.users.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Button type="submit" variant="secondary">
+              Save changes
+            </Button>
+          </form>
+        </CardBody>
+      </Card>
 
-      <div style={{ display: 'flex', gap: '0.5rem' }}>
+      <div className="flex flex-wrap gap-2">
         {NEXT_ACTIONS[request.status].map((action) => (
-          <Button
-            key={action.status}
-            variant={action.status === 'CANCELLED' ? 'danger' : 'primary'}
-            onClick={() => transition(action.status)}
-          >
+          <Button key={action.status} variant={action.variant ?? 'primary'} onClick={() => updateContentRequest(request.id, { status: action.status })}>
             {action.label}
           </Button>
         ))}
+        <Button
+          variant="danger"
+          onClick={() => {
+            deleteContentRequest(request.id);
+            router.push('/content-requests');
+          }}
+        >
+          Delete
+        </Button>
       </div>
     </div>
   );

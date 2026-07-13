@@ -6,6 +6,39 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project's internal releases are tagged (not yet semantically
 versioned against an external consumer, since this is an internal system).
 
+## [v0.3.0-ui-preview] — UI Preview (mock data)
+
+Pivot from the multi-tenant SaaS backend build to a same-day, mock-data-only
+internal tool covering 11 modules — see
+[ADR 0011](docs/adr/0011-ui-preview-mock-data-pivot.md) and
+[`docs/SPRINT_UI_PREVIEW.md`](docs/SPRINT_UI_PREVIEW.md). The Sprint 1–3
+backend and design system (`v0.3.0-sprint3`) are paused, not deleted.
+
+### Added
+- `apps/web` rebuilt on Tailwind CSS with dark/light mode: Login (mock
+  session), Dashboard (charts via Recharts, dataviz-skill palette), Content
+  Requests (list/create/edit/transitions), Task Board (Kanban with
+  drag-and-drop), Content Calendar (month grid), Asset Library, Approvals,
+  Performance Dashboard (manual entry + charts), User Management, Settings.
+- `apps/web/src/mock/` — in-memory + `localStorage`-persisted data layer
+  (`MockDataProvider`/`useMockStore`) replacing all backend calls in this build.
+- `apps/web/src/components/ui/` — a small Tailwind-based primitive set
+  (Button, Card, Badge, Input/Select/Textarea, Table, Modal, Avatar,
+  EmptyState, SearchInput, StatTile).
+- Cookie-based mock session (`mock_user_id`) gating navigation in
+  `middleware.ts`, replacing the Auth.js-backed check for this build.
+
+### Changed
+- `apps/web/src/app/layout.tsx`, `(dashboard)/layout.tsx`,
+  `(auth)/login/page.tsx`, `middleware.ts`, and the Content Requests pages
+  now run on the mock data layer instead of the NestJS API.
+
+### Dormant (not removed)
+- `apps/api` (NestJS/Postgres backend), Docker Compose, CI
+  (`.github/workflows/ci.yml`), Auth.js, the brand-switcher, and the old
+  `/admin/*` dashboard remain in the repo, still independently
+  build/lint/test clean, but are unreferenced by this build.
+
 ## [v0.3.0-sprint3] — Sprint 3A + 3B
 
 Sprint 3 was split into 3A (Design System & Admin UI Foundation) and 3B

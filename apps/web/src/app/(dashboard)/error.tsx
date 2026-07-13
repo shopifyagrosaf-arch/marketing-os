@@ -1,34 +1,23 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Alert, Button } from '@agrosaf/ui';
+import { Button } from '@/components/ui/Button';
 
-/**
- * Next.js error boundary for everything under (dashboard) — catches
- * render/data errors (e.g. a failed apiFetch that a page didn't handle
- * itself) instead of showing Next's default unstyled crash screen.
- */
-export default function DashboardError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function DashboardError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     // eslint-disable-next-line no-console
     console.error(error);
   }, [error]);
 
   return (
-    <Alert tone="error" style={{ flexDirection: 'column', gap: '0.75rem' }}>
+    <div className="flex flex-col gap-3 rounded-xl border border-status-critical/30 bg-status-critical/5 p-4">
       <div>
-        <strong>Something went wrong.</strong>
-        <p style={{ margin: '0.25rem 0 0' }}>{error.message}</p>
+        <p className="text-sm font-semibold text-status-critical">Something went wrong.</p>
+        <p className="mt-1 text-sm text-ink-secondary dark:text-ink-secondary-dark">{error.message}</p>
       </div>
-      <Button variant="secondary" size="sm" onClick={reset} style={{ alignSelf: 'flex-start' }}>
+      <Button variant="secondary" size="sm" onClick={reset} className="self-start">
         Try again
       </Button>
-    </Alert>
+    </div>
   );
 }

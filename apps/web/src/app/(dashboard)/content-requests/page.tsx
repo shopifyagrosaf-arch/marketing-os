@@ -1,188 +1,190 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Plus } from 'lucide-react';
 import Link from 'next/link';
-import {
-  Alert,
-  Badge,
-  Button,
-  EmptyState,
-  FormField,
-  Pagination,
-  Table,
-  Textarea,
-  TextInput,
-} from '@agrosaf/ui';
-import { apiFetch } from '@/lib/api-client';
-import { useBrand } from '@/components/brand-switcher/BrandProvider';
-import { PageHeader } from '@/components/shell/PageHeader';
+import { useMemo, useState } from 'react';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Field, Input, Select, Textarea } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
+import { SearchInput } from '@/components/ui/SearchInput';
+import { Table, Td, Th, Thead, Tr } from '@/components/ui/Table';
+import { PageHeaderBar } from '@/components/shell/PageHeaderBar';
+import { CONTENT_STATUS_TONE, PRIORITY_TONE } from '@/lib/status';
+import type { Channel, ContentRequestStatus, Priority } from '@/mock/types';
+import { useMockStore } from '@/mock/store';
 
-type ContentRequestStatus = 'DRAFT' | 'SUBMITTED' | 'CANCELLED';
-
-interface ContentRequest {
-  id: string;
-  title: string;
-  contentType: string;
-  channel: string | null;
-  status: ContentRequestStatus;
-  dueDate: string | null;
-}
-
-interface ContentRequestsPage {
-  items: ContentRequest[];
-  total: number;
-  page: number;
-  limit: number;
-}
-
-const STATUS_TONE: Record<ContentRequestStatus, 'neutral' | 'info' | 'danger'> = {
-  DRAFT: 'neutral',
-  SUBMITTED: 'info',
-  CANCELLED: 'danger',
-};
+const STATUSES: Array<ContentRequestStatus | 'All'> = [
+  'All',
+  'Draft',
+  'Submitted',
+  'In Review',
+  'Approved',
+  'Rejected',
+  'Published',
+];
+const CHANNELS: Channel[] = ['Instagram', 'Facebook', 'LinkedIn', 'Google Business', 'Website', 'Email', 'YouTube'];
+const PRIORITIES: Priority[] = ['Low', 'Medium', 'High', 'Urgent'];
 
 export default function ContentRequestsPage() {
-  const { selectedBrandId } = useBrand();
-  const [data, setData] = useState<ContentRequestsPage | null>(null);
-  const [page, setPage] = useState(1);
+  const { data, currentUser, addContentRequest } = useMockStore();
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<ContentRequestStatus | 'All'>('All');
+  const [modalOpen, setModalOpen] = useState(false);
+
   const [title, setTitle] = useState('');
-  const [contentType, setContentType] = useState('');
-  const [channel, setChannel] = useState('');
   const [description, setDescription] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [contentType, setContentType] = useState('Social post');
+  const [channel, setChannel] = useState<Channel>('Instagram');
+  const [priority, setPriority] = useState<Priority>('Medium');
+  const [dueDate, setDueDate] = useState('');
 
-  const load = () => {
-    if (!selectedBrandId) return;
-    apiFetch<ContentRequestsPage>(`content-requests?page=${page}`, { brandId: selectedBrandId })
-      .then(setData)
-      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load content requests.'));
-  };
+  const filtered = useMemo(
+    () =>
+      data.contentRequests.filter((cr) => {
+        const matchesSearch = cr.title.toLowerCase().includes(search.toLowerCase());
+        const matchesStatus = statusFilter === 'All' || cr.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      }),
+    [data.contentRequests, search, statusFilter],
+  );
 
-  useEffect(load, [selectedBrandId, page]);
+  const userName = (id: string | null) => data.users.find((u) => u.id === id)?.name ?? '—';
 
-  const createRequest = async (e: React.FormEvent) => {
+  const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    if (!selectedBrandId) return;
-    try {
-      await apiFetch(
-        'content-requests',
-        {
-          method: 'POST',
-          body: { title, contentType, channel: channel || undefined, description: description || undefined },
-          brandId: selectedBrandId,
-        },
-      );
-      setTitle('');
-      setContentType('');
-      setChannel('');
-      setDescription('');
-      setPage(1);
-      load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to create content request.');
-    }
+    if (!currentUser) return;
+    addContentRequest({
+      title,
+      description,
+      contentType,
+      channel,
+      priority,
+      requestedById: currentUser.id,
+      assigneeId: null,
+      dueDate: dueDate || new Date().toISOString().slice(0, 10),
+    });
+    setTitle('');
+    setDescription('');
+    setContentType('Social post');
+    setChannel('Instagram');
+    setPriority('Medium');
+    setDueDate('');
+    setModalOpen(false);
   };
-
-  if (!selectedBrandId) {
-    return (
-      <div>
-        <PageHeader title="Content Requests" />
-        <p>Select a brand to continue.</p>
-      </div>
-    );
-  }
 
   return (
     <div>
-      <PageHeader
+      <PageHeaderBar
         title="Content Requests"
-        description="Submit a request to kick off the content approval workflow."
+        description="Submit and track content requests across every channel."
+        actions={
+          <Button onClick={() => setModalOpen(true)}>
+            <Plus className="h-4 w-4" /> New request
+          </Button>
+        }
       />
-      {error && (
-        <Alert tone="error" style={{ marginBottom: '1rem' }}>
-          {error}
-        </Alert>
-      )}
 
-      <form
-        onSubmit={createRequest}
-        style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem', maxWidth: 480 }}
-      >
-        <FormField label="Title" htmlFor="cr-title">
-          <TextInput
-            id="cr-title"
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-          />
-        </FormField>
-        <FormField label="Content type" htmlFor="cr-content-type" hint="e.g. social_post, blog_article">
-          <TextInput
-            id="cr-content-type"
-            type="text"
-            placeholder="social_post"
-            value={contentType}
-            onChange={(e) => setContentType(e.target.value)}
-            required
-          />
-        </FormField>
-        <FormField label="Channel" htmlFor="cr-channel" hint="Optional, e.g. instagram">
-          <TextInput
-            id="cr-channel"
-            type="text"
-            value={channel}
-            onChange={(e) => setChannel(e.target.value)}
-          />
-        </FormField>
-        <FormField label="Description" htmlFor="cr-description" hint="Optional">
-          <Textarea
-            id="cr-description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-          />
-        </FormField>
-        <Button type="submit" style={{ alignSelf: 'flex-start' }}>
-          Create request
-        </Button>
-      </form>
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <SearchInput
+          placeholder="Search requests…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="sm:max-w-xs"
+        />
+        <Select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as ContentRequestStatus | 'All')}
+          className="sm:w-48"
+        >
+          {STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s === 'All' ? 'All statuses' : s}
+            </option>
+          ))}
+        </Select>
+      </div>
 
-      {data && data.items.length === 0 ? (
-        <EmptyState title="No content requests yet for this brand." />
+      {filtered.length === 0 ? (
+        <EmptyState title="No content requests match your filters." />
       ) : (
-        <Table aria-label="Content requests">
-          <thead>
+        <Table>
+          <Thead>
             <tr>
-              <th>Title</th>
-              <th>Type</th>
-              <th>Channel</th>
-              <th>Status</th>
+              <Th>Title</Th>
+              <Th>Channel</Th>
+              <Th>Priority</Th>
+              <Th>Assignee</Th>
+              <Th>Due</Th>
+              <Th>Status</Th>
             </tr>
-          </thead>
+          </Thead>
           <tbody>
-            {data?.items.map((cr) => (
-              <tr key={cr.id}>
-                <td>
-                  <Link href={`/content-requests/${cr.id}`}>{cr.title}</Link>
-                </td>
-                <td>{cr.contentType}</td>
-                <td>{cr.channel ?? '—'}</td>
-                <td>
-                  <Badge tone={STATUS_TONE[cr.status]}>{cr.status}</Badge>
-                </td>
-              </tr>
+            {filtered.map((cr) => (
+              <Tr key={cr.id}>
+                <Td>
+                  <Link href={`/content-requests/${cr.id}`} className="font-medium text-brand-600 hover:underline dark:text-brand-400">
+                    {cr.title}
+                  </Link>
+                </Td>
+                <Td>{cr.channel}</Td>
+                <Td>
+                  <Badge tone={PRIORITY_TONE[cr.priority]}>{cr.priority}</Badge>
+                </Td>
+                <Td>{userName(cr.assigneeId)}</Td>
+                <Td className="tabular-nums">{cr.dueDate}</Td>
+                <Td>
+                  <Badge tone={CONTENT_STATUS_TONE[cr.status]}>{cr.status}</Badge>
+                </Td>
+              </Tr>
             ))}
           </tbody>
         </Table>
       )}
 
-      {data && (
-        <div style={{ marginTop: '1rem' }}>
-          <Pagination page={data.page} limit={data.limit} total={data.total} onPageChange={setPage} />
-        </div>
-      )}
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="New content request">
+        <form onSubmit={submit} className="space-y-4">
+          <Field label="Title">
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
+          </Field>
+          <Field label="Description" hint="Optional">
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Content type">
+              <Input value={contentType} onChange={(e) => setContentType(e.target.value)} required />
+            </Field>
+            <Field label="Channel">
+              <Select value={channel} onChange={(e) => setChannel(e.target.value as Channel)}>
+                {CHANNELS.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Priority">
+              <Select value={priority} onChange={(e) => setPriority(e.target.value as Priority)}>
+                {PRIORITIES.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Due date">
+              <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+            </Field>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="secondary" onClick={() => setModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit">Create request</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

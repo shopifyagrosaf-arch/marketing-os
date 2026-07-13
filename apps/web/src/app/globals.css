@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+.dark {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-surface-page text-ink-primary antialiased;
+}
+.dark body {
+  @apply bg-surface-dark-page text-ink-primary-dark;
+}
+
+* {
+  @apply border-line-hairline;
+}
+.dark * {
+  @apply border-line-hairline-dark;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-ink-muted/30 rounded-full;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
