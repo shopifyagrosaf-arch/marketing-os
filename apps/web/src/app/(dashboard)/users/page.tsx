@@ -20,7 +20,16 @@ import { useSimulatedLoading } from '@/lib/useSimulatedLoading';
 import type { MockUser, Role } from '@/mock/types';
 import { useMockStore } from '@/mock/store';
 
-const ROLES: Role[] = ['Admin', 'Marketing Head', 'Brand Manager', 'Content Writer', 'Viewer'];
+const ROLES: Role[] = [
+  'Manager',
+  'Management',
+  'Marketing Executive',
+  'Graphic Designer',
+  'Video Editor',
+  'Social Media Executive',
+  'Performance Marketing Executive',
+  'Content Writer',
+];
 const PALETTE = ['#2a78d6', '#1baf7a', '#eda100', '#4a3aa7', '#e34948', '#e87ba4', '#eb6834'];
 const PAGE_SIZE = 8;
 

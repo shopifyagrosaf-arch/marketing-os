@@ -33,6 +33,11 @@ backend and design system (`v0.3.0-sprint3`) are paused, not deleted.
   every mutation, slide-in detail drawers, pagination on every table/grid,
   simulated loading + skeleton states, framer-motion animations (modals,
   drawers, toasts, route transitions), Inter typeface.
+- Seed data replaced with the real team (9 users, `mock/seed.ts`) and
+  `lib/permissions.ts` (`ROLE_ROUTES`/`ROLE_HOME`): each role now lands on
+  a different page after login and only sees the nav/routes relevant to
+  it, enforced in both `Sidebar.tsx` (hides links) and `AppShell.tsx`
+  (redirects off disallowed URLs) — see `docs/SPRINT_UI_PREVIEW.md`.
 
 ### Changed
 - `apps/web/src/app/layout.tsx`, `(dashboard)/layout.tsx`,

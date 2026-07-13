@@ -4,19 +4,21 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Card } from '@/components/ui/Card';
+import { ROLE_HOME } from '@/lib/permissions';
 import { useMockStore } from '@/mock/store';
 
 /**
  * Mock sign-in for the UI-preview build: pick a seeded user, no password/SSO
  * (see docs/SPRINT_UI_PREVIEW.md — real auth is deferred to the backend-
- * integration phase). Sets the `mock_user_id` cookie middleware.ts checks.
+ * integration phase). Sets the `mock_user_id` cookie middleware.ts checks,
+ * then lands the user on their role's home page (see lib/permissions.ts).
  */
 export default function LoginPage() {
   const { data, currentUser, login } = useMockStore();
   const router = useRouter();
 
   useEffect(() => {
-    if (currentUser) router.replace('/');
+    if (currentUser) router.replace(ROLE_HOME[currentUser.role]);
   }, [currentUser, router]);
 
   return (
@@ -39,7 +41,7 @@ export default function LoginPage() {
               key={user.id}
               onClick={() => {
                 login(user.id);
-                router.push('/');
+                router.push(ROLE_HOME[user.role]);
               }}
               className="flex w-full items-center gap-3 rounded-lg border border-line-hairline p-2.5 text-left transition-colors hover:border-brand-500 hover:bg-brand-500/5 dark:border-line-hairline-dark"
             >

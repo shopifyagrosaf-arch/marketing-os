@@ -12,12 +12,15 @@ const iso = (d: Date) => formatISO(d, { representation: 'date' });
 const today = new Date();
 
 export const SEED_USERS: MockUser[] = [
-  { id: 'u1', name: 'Aisha Khan', email: 'aisha@agrosaf.com', role: 'Admin', color: '#2a78d6', status: 'active' },
-  { id: 'u2', name: 'Rohan Mehta', email: 'rohan@agrosaf.com', role: 'Marketing Head', color: '#1baf7a', status: 'active' },
-  { id: 'u3', name: 'Priya Nair', email: 'priya@agrosaf.com', role: 'Brand Manager', color: '#eda100', status: 'active' },
-  { id: 'u4', name: 'Farhan Ali', email: 'farhan@agrosaf.com', role: 'Content Writer', color: '#4a3aa7', status: 'active' },
-  { id: 'u5', name: 'Sara Iqbal', email: 'sara@agrosaf.com', role: 'Content Writer', color: '#e34948', status: 'active' },
-  { id: 'u6', name: 'Imran Sheikh', email: 'imran@agrosaf.com', role: 'Viewer', color: '#eb6834', status: 'invited' },
+  { id: 'u1', name: 'Aman Shakya', email: 'aman@agrosaf.com', role: 'Manager', color: '#2a78d6', status: 'active' },
+  { id: 'u2', name: 'Kushagra Agarwal', email: 'kushagra@agrosaf.com', role: 'Management', color: '#1baf7a', status: 'active' },
+  { id: 'u3', name: 'Rittika Agarwal', email: 'rittika@agrosaf.com', role: 'Marketing Executive', color: '#eda100', status: 'active' },
+  { id: 'u4', name: 'Shraddha Sharma', email: 'shraddha@agrosaf.com', role: 'Graphic Designer', color: '#4a3aa7', status: 'active' },
+  { id: 'u5', name: 'Sarthak Shakya', email: 'sarthak@agrosaf.com', role: 'Video Editor', color: '#e34948', status: 'active' },
+  { id: 'u6', name: 'Muskan Shakya', email: 'muskan@agrosaf.com', role: 'Social Media Executive', color: '#e87ba4', status: 'active' },
+  { id: 'u7', name: 'Sujay Sharma', email: 'sujay@agrosaf.com', role: 'Performance Marketing Executive', color: '#eb6834', status: 'active' },
+  { id: 'u8', name: 'Mansi Jethi', email: 'mansi@agrosaf.com', role: 'Content Writer', color: '#008300', status: 'active' },
+  { id: 'u9', name: 'Shiva Sharma', email: 'shiva@agrosaf.com', role: 'Graphic Designer', color: '#0d366b', status: 'active' },
 ];
 
 export const SEED_BRANDS: Brand[] = [
@@ -85,7 +88,7 @@ export const SEED_CONTENT_REQUESTS: ContentRequest[] = [
     status: 'Draft',
     brandId: 'b2',
     requestedById: 'u2',
-    assigneeId: 'u5',
+    assigneeId: 'u8',
     dueDate: iso(addDays(today, 7)),
     createdAt: iso(subDays(today, 2)),
     updatedAt: iso(subDays(today, 2)),
@@ -100,7 +103,7 @@ export const SEED_CONTENT_REQUESTS: ContentRequest[] = [
     status: 'Submitted',
     brandId: 'b4',
     requestedById: 'u2',
-    assigneeId: 'u4',
+    assigneeId: 'u6',
     dueDate: iso(addDays(today, 1)),
     createdAt: iso(subDays(today, 1)),
     updatedAt: iso(subDays(today, 1)),
@@ -130,7 +133,7 @@ export const SEED_CONTENT_REQUESTS: ContentRequest[] = [
     status: 'Published',
     brandId: 'b1',
     requestedById: 'u2',
-    assigneeId: 'u4',
+    assigneeId: 'u8',
     dueDate: iso(subDays(today, 2)),
     createdAt: iso(subDays(today, 12)),
     updatedAt: iso(subDays(today, 2)),
@@ -159,7 +162,7 @@ export const SEED_CONTENT_REQUESTS: ContentRequest[] = [
     priority: 'Low',
     status: 'Draft',
     brandId: 'b1',
-    requestedById: 'u4',
+    requestedById: 'u8',
     assigneeId: null,
     dueDate: iso(addDays(today, 14)),
     createdAt: iso(today),
@@ -168,22 +171,22 @@ export const SEED_CONTENT_REQUESTS: ContentRequest[] = [
 ];
 
 export const SEED_TASKS: Task[] = [
-  { id: 't1', title: 'Write caption + hashtags for diabetes carousel', contentRequestId: 'cr1', assigneeId: 'u4', status: 'review', priority: 'High', dueDate: iso(addDays(today, 2)), createdAt: iso(subDays(today, 4)) },
-  { id: 't2', title: 'Design 5 carousel slides', contentRequestId: 'cr1', assigneeId: 'u5', status: 'in_progress', priority: 'High', dueDate: iso(addDays(today, 3)), createdAt: iso(subDays(today, 3)) },
-  { id: 't3', title: 'Draft monsoon blog outline', contentRequestId: 'cr2', assigneeId: 'u5', status: 'todo', priority: 'Medium', dueDate: iso(addDays(today, 4)), createdAt: iso(subDays(today, 1)) },
+  { id: 't1', title: 'Write caption + hashtags for diabetes carousel', contentRequestId: 'cr1', assigneeId: 'u8', status: 'review', priority: 'High', dueDate: iso(addDays(today, 2)), createdAt: iso(subDays(today, 4)) },
+  { id: 't2', title: 'Design 5 carousel slides', contentRequestId: 'cr1', assigneeId: 'u4', status: 'in_progress', priority: 'High', dueDate: iso(addDays(today, 3)), createdAt: iso(subDays(today, 3)) },
+  { id: 't3', title: 'Draft monsoon blog outline', contentRequestId: 'cr2', assigneeId: 'u8', status: 'todo', priority: 'Medium', dueDate: iso(addDays(today, 4)), createdAt: iso(subDays(today, 1)) },
   { id: 't4', title: 'Get GMB copy approved', contentRequestId: 'cr3', assigneeId: 'u2', status: 'in_progress', priority: 'Urgent', dueDate: iso(addDays(today, 1)), createdAt: iso(today) },
   { id: 't5', title: 'Storyboard product reel', contentRequestId: 'cr4', assigneeId: 'u5', status: 'done', priority: 'Medium', dueDate: iso(subDays(today, 1)), createdAt: iso(subDays(today, 7)) },
-  { id: 't6', title: 'Schedule newsletter send', contentRequestId: 'cr5', assigneeId: 'u4', status: 'done', priority: 'Low', dueDate: iso(subDays(today, 2)), createdAt: iso(subDays(today, 10)) },
+  { id: 't6', title: 'Schedule newsletter send', contentRequestId: 'cr5', assigneeId: 'u6', status: 'done', priority: 'Low', dueDate: iso(subDays(today, 2)), createdAt: iso(subDays(today, 10)) },
   { id: 't7', title: 'Revise testimonial script per legal notes', contentRequestId: 'cr6', assigneeId: 'u5', status: 'todo', priority: 'High', dueDate: iso(addDays(today, 4)), createdAt: iso(subDays(today, 1)) },
-  { id: 't8', title: 'Source festival greeting template', contentRequestId: 'cr7', assigneeId: 'u4', status: 'todo', priority: 'Low', dueDate: iso(addDays(today, 12)), createdAt: iso(today) },
+  { id: 't8', title: 'Source festival greeting template', contentRequestId: 'cr7', assigneeId: 'u9', status: 'todo', priority: 'Low', dueDate: iso(addDays(today, 12)), createdAt: iso(today) },
 ];
 
 export const SEED_ASSETS: Asset[] = [
-  { id: 'a1', name: 'diabetes-slide-1.png', type: 'image', url: '', thumbColor: '#2a78d6', contentRequestId: 'cr1', uploadedById: 'u5', sizeKb: 842, createdAt: iso(subDays(today, 2)) },
-  { id: 'a2', name: 'diabetes-slide-2.png', type: 'image', url: '', thumbColor: '#1baf7a', contentRequestId: 'cr1', uploadedById: 'u5', sizeKb: 913, createdAt: iso(subDays(today, 2)) },
-  { id: 'a3', name: 'hospital-wing-hero.jpg', type: 'image', url: '', thumbColor: '#eda100', contentRequestId: 'cr3', uploadedById: 'u4', sizeKb: 1204, createdAt: iso(subDays(today, 1)) },
+  { id: 'a1', name: 'diabetes-slide-1.png', type: 'image', url: '', thumbColor: '#2a78d6', contentRequestId: 'cr1', uploadedById: 'u4', sizeKb: 842, createdAt: iso(subDays(today, 2)) },
+  { id: 'a2', name: 'diabetes-slide-2.png', type: 'image', url: '', thumbColor: '#1baf7a', contentRequestId: 'cr1', uploadedById: 'u4', sizeKb: 913, createdAt: iso(subDays(today, 2)) },
+  { id: 'a3', name: 'hospital-wing-hero.jpg', type: 'image', url: '', thumbColor: '#eda100', contentRequestId: 'cr3', uploadedById: 'u9', sizeKb: 1204, createdAt: iso(subDays(today, 1)) },
   { id: 'a4', name: 'product-reel-draft.mp4', type: 'video', url: '', thumbColor: '#4a3aa7', contentRequestId: 'cr4', uploadedById: 'u5', sizeKb: 15230, createdAt: iso(subDays(today, 4)) },
-  { id: 'a5', name: 'newsletter-july.pdf', type: 'document', url: '', thumbColor: '#e34948', contentRequestId: 'cr5', uploadedById: 'u4', sizeKb: 320, createdAt: iso(subDays(today, 6)) },
+  { id: 'a5', name: 'newsletter-july.pdf', type: 'document', url: '', thumbColor: '#e34948', contentRequestId: 'cr5', uploadedById: 'u8', sizeKb: 320, createdAt: iso(subDays(today, 6)) },
   { id: 'a6', name: 'brand-logo-pack.zip', type: 'other', url: '', thumbColor: '#eb6834', contentRequestId: null, uploadedById: 'u1', sizeKb: 4096, createdAt: iso(subDays(today, 20)) },
 ];
 

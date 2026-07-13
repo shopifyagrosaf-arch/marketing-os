@@ -22,8 +22,14 @@ database.
 
 ## Modules delivered (10 pages + navigation)
 
-1. **Login** — mock sign-in: pick a seeded user, no password/SSO. Sets a
-   `mock_user_id` cookie `middleware.ts` gates navigation on.
+1. **Login** — mock sign-in: pick one of the real team's 9 seeded users
+   (Aman Shakya/Manager, Kushagra Agarwal/Management, Rittika Agarwal/
+   Marketing Executive, Shraddha Sharma & Shiva Sharma/Graphic Designer,
+   Sarthak Shakya/Video Editor, Muskan Shakya/Social Media Executive, Sujay
+   Sharma/Performance Marketing Executive, Mansi Jethi/Content Writer), no
+   password/SSO. Sets a `mock_user_id` cookie `middleware.ts` gates
+   navigation on, then routes to that role's home page (see
+   `lib/permissions.ts`) — everyone does **not** land on the same screen.
 2. **Dashboard** — clickable stat tiles (link to the relevant page), a
    requests-by-status bar chart and a gradient-filled reach area chart
    (Recharts, palette/marks per the dataviz skill), recent activity feed
@@ -93,6 +99,35 @@ database.
 - **Charts**: the dashboard's reach chart is now a gradient area chart
   with a formatted tooltip; all charts keep the dataviz skill's rules
   (one axis, fixed categorical order, status-reserved colors).
+
+## Real team + role-based access (this pass)
+
+The 9 demo users were replaced with the actual team (see `mock/seed.ts`).
+Avatar initials are derived automatically from each name (`Avatar.tsx`
+already split-and-slice'd on name — no per-user initials were hand-set).
+
+`lib/permissions.ts` defines, per role: `ROLE_ROUTES` (which pages a role
+may reach) and `ROLE_HOME` (which page they land on right after login):
+
+| Role | Home page | Reachable pages |
+|---|---|---|
+| Manager, Management | Dashboard | Everything, including User Management and Brands |
+| Marketing Executive | Content Requests | Dashboard, Content Requests, Tasks, Calendar, Performance, Settings |
+| Graphic Designer (×2), Video Editor | Asset Library | Dashboard, Tasks, Assets, Settings |
+| Social Media Executive | Content Calendar | Dashboard, Content Requests, Tasks, Calendar, Assets, Settings |
+| Performance Marketing Executive | Performance | Dashboard, Content Requests, Performance, Settings |
+| Content Writer | Content Requests | Dashboard, Content Requests, Tasks, Settings |
+
+This is enforced twice, not just visually: `Sidebar.tsx` hides links a role
+can't reach, and `AppShell.tsx` redirects to the role's home page if it
+detects the current URL isn't in that role's `ROLE_ROUTES` (e.g. typing
+`/users` in directly as a Content Writer bounces to `/content-requests`).
+Approvals and User/Brand management stay Manager/Management-only, matching
+who actually approves content and manages the team today.
+
+This is still a **UI-layer permission model** — there is no backend to
+enforce it against, so it governs navigation/rendering only, the same
+caveat as every other mock-data behavior in this build.
 
 ## Architecture decisions specific to this build
 

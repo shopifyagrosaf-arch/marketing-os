@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
+import { canAccessRoute, ROLE_HOME } from '@/lib/permissions';
 import { useMockStore } from '@/mock/store';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
@@ -25,7 +26,13 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   }, [checked, currentUser, router]);
 
-  if (!currentUser) {
+  useEffect(() => {
+    if (currentUser && !canAccessRoute(currentUser.role, pathname)) {
+      router.replace(ROLE_HOME[currentUser.role]);
+    }
+  }, [currentUser, pathname, router]);
+
+  if (!currentUser || !canAccessRoute(currentUser.role, pathname)) {
     return <div className="flex min-h-screen items-center justify-center text-sm text-ink-muted">Loading…</div>;
   }
 

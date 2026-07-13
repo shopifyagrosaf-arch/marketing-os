@@ -16,6 +16,8 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/components/ui/cn';
+import { ROLE_ROUTES } from '@/lib/permissions';
+import { useMockStore } from '@/mock/store';
 
 const NAV = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -30,11 +32,17 @@ const NAV = [
 const ADMIN_NAV = [
   { href: '/users', label: 'User Management', icon: Users },
   { href: '/brands', label: 'Brands', icon: Building2 },
-  { href: '/settings', label: 'Settings', icon: Settings },
 ];
+
+const SETTINGS_NAV = { href: '/settings', label: 'Settings', icon: Settings };
 
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname();
+  const { currentUser } = useMockStore();
+  const allowed = currentUser ? new Set(ROLE_ROUTES[currentUser.role]) : null;
+
+  const visibleNav = NAV.filter((item) => !allowed || allowed.has(item.href));
+  const visibleAdminNav = ADMIN_NAV.filter((item) => !allowed || allowed.has(item.href));
 
   const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
 
@@ -70,20 +78,29 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto px-3">
-          {NAV.map(({ href, label, icon: Icon }) => (
+          {visibleNav.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href} className={linkClass(href)} onClick={onClose}>
               <Icon className="h-4 w-4" />
               {label}
             </Link>
           ))}
 
-          <p className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wide text-ink-muted">Admin</p>
-          {ADMIN_NAV.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href} className={linkClass(href)} onClick={onClose}>
-              <Icon className="h-4 w-4" />
-              {label}
-            </Link>
-          ))}
+          {visibleAdminNav.length > 0 && (
+            <>
+              <p className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wide text-ink-muted">Admin</p>
+              {visibleAdminNav.map(({ href, label, icon: Icon }) => (
+                <Link key={href} href={href} className={linkClass(href)} onClick={onClose}>
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </Link>
+              ))}
+            </>
+          )}
+
+          <Link href={SETTINGS_NAV.href} className={linkClass(SETTINGS_NAV.href)} onClick={onClose}>
+            <SETTINGS_NAV.icon className="h-4 w-4" />
+            {SETTINGS_NAV.label}
+          </Link>
         </nav>
 
         <div className="border-t border-line-hairline p-3 text-xs text-ink-muted dark:border-line-hairline-dark">

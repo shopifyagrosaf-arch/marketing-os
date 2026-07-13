@@ -1,4 +1,12 @@
-export type Role = 'Admin' | 'Marketing Head' | 'Brand Manager' | 'Content Writer' | 'Viewer';
+export type Role =
+  | 'Manager'
+  | 'Management'
+  | 'Marketing Executive'
+  | 'Graphic Designer'
+  | 'Video Editor'
+  | 'Social Media Executive'
+  | 'Performance Marketing Executive'
+  | 'Content Writer';
 
 export interface Brand {
   id: string;

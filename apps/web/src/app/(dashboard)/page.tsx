@@ -21,6 +21,7 @@ import { SkeletonStatRow } from '@/components/ui/Skeleton';
 import { StatTile } from '@/components/ui/StatTile';
 import { PageHeaderBar } from '@/components/shell/PageHeaderBar';
 import { useSimulatedLoading } from '@/lib/useSimulatedLoading';
+import { canAccessRoute } from '@/lib/permissions';
 import { CONTENT_STATUS_COLOR, CONTENT_STATUS_TONE } from '@/lib/status';
 import type { ContentRequestStatus } from '@/mock/types';
 import { useMockStore } from '@/mock/store';
@@ -32,8 +33,9 @@ function formatCompact(n: number) {
 }
 
 export default function DashboardPage() {
-  const { data, theme } = useMockStore();
+  const { data, theme, currentUser } = useMockStore();
   const loading = useSimulatedLoading();
+  const linkFor = (href: string) => (currentUser && canAccessRoute(currentUser.role, href) ? href : undefined);
   const axisColor = '#898781';
   const gridColor = theme === 'dark' ? '#2c2c2a' : '#e1e0d9';
   const surface = theme === 'dark' ? '#1a1a19' : '#fcfcfb';
@@ -77,21 +79,26 @@ export default function DashboardPage() {
             label="Open requests"
             value={openRequests}
             icon={<FileText className="h-4 w-4" />}
-            href="/content-requests"
+            href={linkFor('/content-requests')}
           />
           <StatTile
             label="Pending approvals"
             value={pendingApprovals}
             icon={<CheckSquare className="h-4 w-4" />}
-            href="/approvals"
+            href={linkFor('/approvals')}
           />
-          <StatTile label="Tasks in flight" value={tasksInFlight} icon={<Clock className="h-4 w-4" />} href="/tasks" />
+          <StatTile
+            label="Tasks in flight"
+            value={tasksInFlight}
+            icon={<Clock className="h-4 w-4" />}
+            href={linkFor('/tasks')}
+          />
           <StatTile
             label="Total reach (14d)"
             value={formatCompact(totalReach)}
             delta="+12.4% vs prior period"
             icon={<TrendingUp className="h-4 w-4" />}
-            href="/performance"
+            href={linkFor('/performance')}
           />
         </div>
       )}
@@ -183,19 +190,29 @@ export default function DashboardPage() {
           <h2 className="text-sm font-semibold text-ink-primary dark:text-ink-primary-dark">Recent activity</h2>
         </CardHeader>
         <CardBody className="space-y-1">
-          {recent.map((cr) => (
-            <Link
-              key={cr.id}
-              href={`/content-requests/${cr.id}`}
-              className="flex items-center justify-between gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-surface-page dark:hover:bg-white/5"
-            >
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-ink-primary dark:text-ink-primary-dark">{cr.title}</p>
-                <p className="text-xs text-ink-muted">Updated {cr.updatedAt}</p>
+          {recent.map((cr) => {
+            const rowClass =
+              'flex items-center justify-between gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-surface-page dark:hover:bg-white/5';
+            const rowContent = (
+              <>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-ink-primary dark:text-ink-primary-dark">{cr.title}</p>
+                  <p className="text-xs text-ink-muted">Updated {cr.updatedAt}</p>
+                </div>
+                <Badge tone={CONTENT_STATUS_TONE[cr.status]}>{cr.status}</Badge>
+              </>
+            );
+            const href = linkFor('/content-requests');
+            return href ? (
+              <Link key={cr.id} href={`/content-requests/${cr.id}`} className={rowClass}>
+                {rowContent}
+              </Link>
+            ) : (
+              <div key={cr.id} className={rowClass}>
+                {rowContent}
               </div>
-              <Badge tone={CONTENT_STATUS_TONE[cr.status]}>{cr.status}</Badge>
-            </Link>
-          ))}
+            );
+          })}
         </CardBody>
       </Card>
     </div>

@@ -28,7 +28,7 @@ import type {
   Task,
 } from './types';
 
-const STORAGE_KEY = 'agrosaf-mvp-data-v2';
+const STORAGE_KEY = 'agrosaf-mvp-data-v3';
 const SESSION_COOKIE = 'mock_user_id';
 
 function seedData(): AppData {
