@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { serverApiFetch } from '@/lib/server-api';
+import { AdminSidebar } from '@/components/shell/AdminSidebar';
 
 const ADMIN_ROLES = ['SUPER_ADMIN', 'MARKETING_HEAD'];
 
@@ -18,17 +18,5 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     redirect('/');
   }
 
-  return (
-    <div style={{ display: 'flex', gap: '2rem' }}>
-      <nav style={{ minWidth: 160, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <Link href="/admin">Overview</Link>
-        <Link href="/admin/users">Users</Link>
-        <Link href="/admin/roles">Roles</Link>
-        <Link href="/admin/permissions">Permissions</Link>
-        <Link href="/admin/brands">Brands</Link>
-        <Link href="/admin/organization">Organization</Link>
-      </nav>
-      <div style={{ flex: 1 }}>{children}</div>
-    </div>
-  );
+  return <AdminSidebar>{children}</AdminSidebar>;
 }

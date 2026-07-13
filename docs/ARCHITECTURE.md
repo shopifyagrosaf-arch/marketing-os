@@ -74,12 +74,29 @@ cloud portability — no provider-specific SDKs are to be baked into core
 business logic; swapping the storage or hosting provider should not require
 touching module code, only the relevant adapter.
 
+## Content request workflow (Sprint 3B)
+
+`ContentRequest` (`schema.prisma`) is brand-scoped, attributed to its
+requester, and carries a `ContentRequestStatus` enum
+(`DRAFT`/`SUBMITTED`/`CANCELLED` today) enforced by a transition table
+(`modules/content-requests/content-request-workflow.ts` — see
+[ADR 0010](adr/0010-content-request-workflow-skeleton.md)). This is
+intake-only: the SRS's full 10-step approval pipeline (Brand Review,
+Compliance, Design upload/Approval, Marketing Head Approval, Publishing,
+Content Library) extends this same status enum/transition table across
+Sprints 5-7, not a parallel model. Unlike admin endpoints, `/content-requests`
+uses `BrandAccessGuard` alone (no `@Roles`) — any role with brand access can
+create/view; edit/transition additionally requires being the requester or
+holding an org-wide role.
+
 ## What's deliberately NOT here yet
 
 Per the approved phased roadmap, these are out of scope until later sprints
 and should not be added ahead of schedule:
-- Content/workflow/compliance/publishing/analytics data model (Sprint 3+)
+- The rest of the 10-step approval pipeline beyond intake — Brand Review/
+  Compliance (Sprint 5), Design upload/Approval (Sprint 6), Marketing Head
+  Approval/Publishing Queue (Sprint 7), Content Library (Sprint 10)
 - Direct social platform API integrations (Phase 2 — manual publishing first)
-- Custom role/permission CRUD UI (Sprint 2 — read-only `/roles` today)
+- Direct AI drafting integration on a content request (Sprint 4 — Mode 1)
 - WhatsApp/Teams/Slack notification channels
 - Any AI generation (Mode 1 or Mode 2)

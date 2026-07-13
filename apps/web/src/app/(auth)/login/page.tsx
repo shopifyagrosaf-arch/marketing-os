@@ -1,3 +1,4 @@
+import { Button, Card } from '@agrosaf/ui';
 import { signIn } from '@/lib/auth';
 
 /**
@@ -8,8 +9,8 @@ import { signIn } from '@/lib/auth';
 export default function LoginPage() {
   return (
     <main style={{ display: 'grid', placeItems: 'center', minHeight: '100vh' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: 280 }}>
-        <h1 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Agrosaf Marketing OS</h1>
+      <Card style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: 280 }}>
+        <h1 style={{ fontSize: 'var(--font-size-lg)', margin: '0 0 0.5rem' }}>Agrosaf Marketing OS</h1>
 
         <form
           action={async () => {
@@ -17,9 +18,9 @@ export default function LoginPage() {
             await signIn('google');
           }}
         >
-          <button type="submit" style={{ width: '100%' }}>
+          <Button type="submit" style={{ width: '100%' }}>
             Continue with Google Workspace
-          </button>
+          </Button>
         </form>
 
         <form
@@ -28,11 +29,11 @@ export default function LoginPage() {
             await signIn('microsoft-entra-id');
           }}
         >
-          <button type="submit" style={{ width: '100%' }}>
+          <Button type="submit" variant="secondary" style={{ width: '100%' }}>
             Continue with Microsoft 365
-          </button>
+          </Button>
         </form>
-      </div>
+      </Card>
     </main>
   );
 }

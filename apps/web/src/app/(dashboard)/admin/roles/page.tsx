@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Alert, Badge, Button, Checkbox, FormField, Table, TextInput } from '@agrosaf/ui';
 import { apiFetch } from '@/lib/api-client';
+import { PageHeader } from '@/components/shell/PageHeader';
 
 interface Role {
   id: string;
@@ -72,10 +74,14 @@ export default function AdminRolesPage() {
 
   return (
     <div>
-      <h1>Roles</h1>
-      {error && <p role="alert">{error}</p>}
+      <PageHeader title="Roles" />
+      {error && (
+        <Alert tone="error" style={{ marginBottom: '1rem' }}>
+          {error}
+        </Alert>
+      )}
 
-      <table style={{ marginBottom: '1rem' }}>
+      <Table aria-label="Roles" style={{ marginBottom: '1.5rem' }}>
         <thead>
           <tr>
             <th>Name</th>
@@ -88,47 +94,63 @@ export default function AdminRolesPage() {
           {roles.map((role) => (
             <tr key={role.id}>
               <td>{role.name}</td>
-              <td>{role.isOrgWide ? 'Yes' : 'No'}</td>
-              <td>{role.isCustom ? 'Yes' : 'Built-in'}</td>
-              <td>{role.isCustom && <button onClick={() => removeRole(role.id)}>Delete</button>}</td>
+              <td>
+                <Badge tone={role.isOrgWide ? 'info' : 'neutral'}>
+                  {role.isOrgWide ? 'Yes' : 'No'}
+                </Badge>
+              </td>
+              <td>
+                <Badge tone={role.isCustom ? 'success' : 'neutral'}>
+                  {role.isCustom ? 'Yes' : 'Built-in'}
+                </Badge>
+              </td>
+              <td>
+                {role.isCustom && (
+                  <Button variant="danger" size="sm" onClick={() => removeRole(role.id)}>
+                    Delete
+                  </Button>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>
-      </table>
+      </Table>
 
-      <form onSubmit={createRole}>
+      <form onSubmit={createRole} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <h2>Create custom role</h2>
-        <input
-          type="text"
-          placeholder="REGIONAL_BRAND_LEAD"
-          value={name}
-          onChange={(e) => setName(e.target.value.toUpperCase())}
-          required
-        />
-        <label>
-          <input
-            type="checkbox"
-            checked={isOrgWide}
-            onChange={(e) => setIsOrgWide(e.target.checked)}
+        <FormField label="Role name" htmlFor="role-name" hint="e.g. REGIONAL_BRAND_LEAD">
+          <TextInput
+            id="role-name"
+            type="text"
+            placeholder="REGIONAL_BRAND_LEAD"
+            value={name}
+            onChange={(e) => setName(e.target.value.toUpperCase())}
+            required
           />
-          Org-wide (not brand-scoped)
-        </label>
+        </FormField>
+        <Checkbox
+          label="Org-wide (not brand-scoped)"
+          checked={isOrgWide}
+          onChange={(e) => setIsOrgWide(e.target.checked)}
+        />
 
-        <fieldset>
+        <fieldset style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
           <legend>Permissions</legend>
-          {permissions.map((p) => (
-            <label key={p.id} style={{ display: 'block' }}>
-              <input
-                type="checkbox"
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {permissions.map((p) => (
+              <Checkbox
+                key={p.id}
+                label={p.action}
                 checked={selectedActions.includes(p.action)}
                 onChange={() => toggleAction(p.action)}
               />
-              {p.action}
-            </label>
-          ))}
+            ))}
+          </div>
         </fieldset>
 
-        <button type="submit">Create role</button>
+        <Button type="submit" style={{ alignSelf: 'flex-start' }}>
+          Create role
+        </Button>
       </form>
     </div>
   );

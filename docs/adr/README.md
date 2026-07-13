@@ -15,6 +15,8 @@ simplified in isolation but exist because of a constraint documented here.
 | [0006](0006-phased-publishing-analytics.md) | Manual publishing/analytics first, API integrations phased | Accepted |
 | [0007](0007-tech-stack-selection.md) | Tech stack: Next.js / NestJS / PostgreSQL+Prisma / Redis / R2 / Auth.js | Accepted |
 | [0008](0008-role-organization-scoping.md) | Custom roles are organization-scoped; built-in roles are global | Accepted |
+| [0009](0009-design-system-css-modules.md) | Design system styled with CSS Modules, not Tailwind/CSS-in-JS | Accepted |
+| [0010](0010-content-request-workflow-skeleton.md) | Content request workflow as an in-module transition table, not a generic state-machine engine | Accepted |
 
 New ADRs: copy [`0000-template.md`](0000-template.md), number it
 sequentially, and add a row above.

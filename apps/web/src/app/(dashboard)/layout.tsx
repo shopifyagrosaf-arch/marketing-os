@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react';
-import Link from 'next/link';
-import { signOut } from '@/lib/auth';
+import { Container } from '@agrosaf/ui';
 import { serverApiFetch } from '@/lib/server-api';
 import { BrandProvider } from '@/components/brand-switcher/BrandProvider';
-import { BrandSwitcher } from '@/components/brand-switcher/BrandSwitcher';
+import { AppHeader } from '@/components/shell/AppHeader';
 
 const ADMIN_ROLES = ['SUPER_ADMIN', 'MARKETING_HEAD'];
 
@@ -13,31 +12,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
   return (
     <BrandProvider>
-      <header
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '0.75rem 1.5rem',
-          borderBottom: '1px solid #ddd',
-        }}
-      >
-        <strong>Agrosaf Marketing OS</strong>
-        <nav style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <Link href="/">Dashboard</Link>
-          {isOrgAdmin && <Link href="/admin">Admin</Link>}
-        </nav>
-        <BrandSwitcher />
-        <form
-          action={async () => {
-            'use server';
-            await signOut();
-          }}
-        >
-          <button type="submit">Sign out</button>
-        </form>
-      </header>
-      <main style={{ padding: '1.5rem' }}>{children}</main>
+      <AppHeader isOrgAdmin={isOrgAdmin} />
+      <Container>{children}</Container>
     </BrandProvider>
   );
 }

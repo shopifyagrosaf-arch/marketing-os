@@ -1,6 +1,7 @@
-// Agrosaf Marketing OS — Sprint 1 schema
-// Scope: Organization/Brand hierarchy, Users, RBAC (Role/Permission/BrandAccess), Audit log.
-// Content/workflow/publishing/analytics models are added in later sprints per the roadmap.
+// Agrosaf Marketing OS — schema
+// Sprint 1: Organization/Brand hierarchy, Users, RBAC (Role/Permission/BrandAccess), Audit log.
+// Sprint 3B: ContentRequest — intake + workflow engine skeleton (status enum + transitions).
+// Publishing/analytics models and the rest of the approval pipeline are added in later sprints per the roadmap.
 
 generator client {
   provider = "prisma-client-js"
@@ -39,8 +40,9 @@ model Brand {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  brandAccess  BrandAccess[]
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  brandAccess     BrandAccess[]
+  contentRequests ContentRequest[]
 
   @@index([organizationId])
   @@map("brands")
@@ -49,17 +51,18 @@ model Brand {
 /// A person who can log in. Identity comes from Auth.js (SSO); this
 /// row is created/linked on first login (see AuthService.validateOrCreateUser).
 model User {
-  id             String    @id @default(cuid())
+  id             String     @id @default(cuid())
   organizationId String
-  email          String    @unique
+  email          String     @unique
   name           String
   authProviderId String? // subject/id from the SSO provider
   status         UserStatus @default(ACTIVE)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 
-  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  brandAccess  BrandAccess[]
+  organization     Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  brandAccess      BrandAccess[]
+  requestedContent ContentRequest[]
 
   @@index([organizationId])
   @@map("users")
@@ -99,8 +102,8 @@ model Role {
 /// Kept as a flat action string rather than a fixed enum so Super Admin
 /// can compose custom roles without a code change.
 model Permission {
-  id     String @id @default(cuid())
-  action String @unique
+  id          String  @id @default(cuid())
+  action      String  @unique
   description String?
 
   roles RolePermission[]
@@ -155,4 +158,40 @@ model AuditLog {
 
   @@index([entityType, entityId])
   @@map("audit_logs")
+}
+
+/// Sprint 3B: intake + workflow-engine skeleton (roadmap Sprint 3B scope is
+/// deliberately just "status enum + transitions" — the 10-step approval
+/// pipeline's later stages (Brand Review/Compliance/Design/Marketing Head
+/// Approval, Sprints 5-7) extend `ContentRequestStatus` and
+/// `CONTENT_REQUEST_TRANSITIONS` rather than introducing a parallel model.
+/// `contentType`/`channel` are free-form strings, not fixed enums, matching
+/// the existing `Permission.action`/`Role.name` precedent — no confirmed
+/// exhaustive taxonomy exists yet, and a string avoids a migration every
+/// time one is added.
+model ContentRequest {
+  id            String               @id @default(cuid())
+  brandId       String
+  requestedById String
+  title         String
+  description   String?
+  contentType   String
+  channel       String?
+  status        ContentRequestStatus @default(DRAFT)
+  dueDate       DateTime?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  brand       Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  requestedBy User  @relation(fields: [requestedById], references: [id], onDelete: Restrict)
+
+  @@index([brandId])
+  @@index([requestedById])
+  @@map("content_requests")
+}
+
+enum ContentRequestStatus {
+  DRAFT
+  SUBMITTED
+  CANCELLED
 }

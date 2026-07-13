@@ -6,6 +6,71 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project's internal releases are tagged (not yet semantically
 versioned against an external consumer, since this is an internal system).
 
+## [v0.3.0-sprint3] — Sprint 3A + 3B
+
+Sprint 3 was split into 3A (Design System & Admin UI Foundation) and 3B
+(Content Request Intake & Workflow Engine) at the user's request — see
+`ROADMAP.md`'s "Notes on scope changes". Both are tagged together since 3B
+was built directly on top of 3A in the same pass.
+
+### Added — Sprint 3A (Design System & Admin UI Foundation)
+
+- New workspace package `packages/ui`: design tokens (`tokens.css`) and 12
+  components (`Button`, `FormField`/`TextInput`/`Textarea`/`Select`/
+  `Checkbox`, `Table`, `Card`, `Container`, `Badge`, `Alert`, `Spinner`,
+  `EmptyState`, `Pagination`), styled with CSS Modules
+  (see `docs/adr/0009-design-system-css-modules.md`). 21 component tests.
+- Admin UI Foundation (`apps/web/src/components/shell/`): `AppHeader`,
+  `AdminSidebar`, `PageHeader` — replace Sprint 1/2's inline-styled
+  header/nav/`<h1>`.
+- Every existing page (`(dashboard)`/`admin` layouts, all six `/admin/*`
+  pages, dashboard placeholder, `loading`/`error`, `/login`,
+  `BrandSwitcher`) refactored onto the design system, same behavior/endpoints.
+- Users list now renders real pagination (`Pagination`, wired to the
+  `{ items, total, page, limit }` shape `GET /users` already returned) and
+  an `EmptyState` for no-results searches.
+- `docs/DESIGN_SYSTEM.md` (token/component reference) and
+  `docs/SPRINT_3A.md`.
+
+### Added — Sprint 3B (Content Request Intake & Workflow Engine)
+
+- `ContentRequest` model (brand-scoped, attributed to its requester) with a
+  `ContentRequestStatus` enum (`DRAFT`/`SUBMITTED`/`CANCELLED`) and a
+  workflow engine skeleton — `CONTENT_REQUEST_TRANSITIONS` lookup table +
+  `assertValidContentRequestTransition`, the single enforcement point for
+  legal status changes (see `docs/adr/0010-content-request-workflow-skeleton.md`).
+  Migration `content_request_intake`.
+- `GET/POST /content-requests`, `GET/PATCH /content-requests/:id`,
+  `PATCH /content-requests/:id/status` — brand-scoped via `BrandAccessGuard`
+  alone (no `@Roles`; intake is open to any role with brand access);
+  edit/transition additionally requires being the requester or holding an
+  org-wide role. Every mutation writes through `AuditLogService`.
+- Frontend: `Content Requests` list (paginated, with a create form) and
+  detail page (edit while `DRAFT`, Submit/Cancel/Withdraw transition
+  actions) under `(dashboard)/content-requests/`, linked from `AppHeader`
+  for every authenticated user (not admin-gated).
+- `docs/SPRINT_3B.md`.
+
+### Fixed (found during Sprint 3A review)
+
+- The first version of the Jest CSS-Modules mock silently broke every
+  `className` assertion: its unguarded `Proxy` answered TypeScript's
+  `__importDefault` interop check (`mod.__esModule`) with the truthy string
+  `'__esModule'`, causing the helper to return `styles.default` (literally
+  the string `'default'`) instead of the module — every `styles.foo` lookup
+  then silently evaluated to `undefined`. Caught because `Button.spec.tsx`/
+  `Badge.spec.tsx` explicitly assert on `.className`. **Fix**: the mock's
+  `get` trap now special-cases `__esModule` to return `false` (the standard
+  `identity-obj-proxy` pattern).
+- `apps/web`'s ts-jest transform didn't know about Next's `jsx: "preserve"`
+  tsconfig setting (meant for Next's own SWC/Babel pipeline, not ts-jest),
+  and Jest's default `transformIgnorePatterns` was skipping `@agrosaf/ui`'s
+  raw `.tsx` source as a `node_modules` dependency. Both were latent since
+  Sprint 1 (zero `.tsx` test files existed before this sprint) and surfaced
+  once component tests were added. **Fix**: `apps/web/jest.config.js` now
+  overrides `jsx: 'react-jsx'` for ts-jest and carves out
+  `/node_modules/(?!@agrosaf)` from `transformIgnorePatterns`.
+
 ## [v0.2.0-sprint2] — Sprint 2
 
 ### Added

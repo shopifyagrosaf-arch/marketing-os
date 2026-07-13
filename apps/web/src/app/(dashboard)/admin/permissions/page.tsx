@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Alert, Button, FormField, Table, TextInput } from '@agrosaf/ui';
 import { apiFetch } from '@/lib/api-client';
+import { PageHeader } from '@/components/shell/PageHeader';
 
 interface Permission {
   id: string;
@@ -25,7 +27,10 @@ export default function AdminPermissionsPage() {
     e.preventDefault();
     setError(null);
     try {
-      await apiFetch('permissions', { method: 'POST', body: { action, description: description || undefined } });
+      await apiFetch('permissions', {
+        method: 'POST',
+        body: { action, description: description || undefined },
+      });
       setAction('');
       setDescription('');
       load();
@@ -36,10 +41,14 @@ export default function AdminPermissionsPage() {
 
   return (
     <div>
-      <h1>Permissions</h1>
-      {error && <p role="alert">{error}</p>}
+      <PageHeader title="Permissions" />
+      {error && (
+        <Alert tone="error" style={{ marginBottom: '1rem' }}>
+          {error}
+        </Alert>
+      )}
 
-      <table style={{ marginBottom: '1rem' }}>
+      <Table aria-label="Permissions" style={{ marginBottom: '1.5rem' }}>
         <thead>
           <tr>
             <th>Action</th>
@@ -54,23 +63,29 @@ export default function AdminPermissionsPage() {
             </tr>
           ))}
         </tbody>
-      </table>
+      </Table>
 
-      <form onSubmit={createPermission} style={{ display: 'flex', gap: '0.5rem' }}>
-        <input
-          type="text"
-          placeholder="content:approve"
-          value={action}
-          onChange={(e) => setAction(e.target.value)}
-          required
-        />
-        <input
-          type="text"
-          placeholder="Description (optional)"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-        <button type="submit">Create permission</button>
+      <form onSubmit={createPermission} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+        <FormField label="Action" htmlFor="permission-action">
+          <TextInput
+            id="permission-action"
+            type="text"
+            placeholder="content:approve"
+            value={action}
+            onChange={(e) => setAction(e.target.value)}
+            required
+          />
+        </FormField>
+        <FormField label="Description" htmlFor="permission-description">
+          <TextInput
+            id="permission-description"
+            type="text"
+            placeholder="Description (optional)"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </FormField>
+        <Button type="submit">Create permission</Button>
       </form>
     </div>
   );

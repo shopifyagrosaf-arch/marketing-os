@@ -5,20 +5,22 @@ planning, AI-assisted drafting, brand/compliance approval, publishing, and
 analytics across the group's four brands (Agrosaf Pharmaceuticals, Alosafe
 Pharmacare, Medizone, Hospital Marketing), operated by one shared marketing team.
 
-**Status:** Sprint 2 (User/Role/Permission/Organization/Brand management +
-Admin Dashboard) complete — tagged `v0.2.0-sprint2`. See
-[`ROADMAP.md`](ROADMAP.md) for what's next and [`CHANGELOG.md`](CHANGELOG.md)
-for release history.
+**Status:** Sprint 3B (Content Request Intake & Workflow Engine), built on
+Sprint 3A's Design System & Admin UI Foundation, complete — tagged
+`v0.3.0-sprint3`. See [`ROADMAP.md`](ROADMAP.md) for what's next and
+[`CHANGELOG.md`](CHANGELOG.md) for release history.
 
 ## Documentation
 
 - [`ROADMAP.md`](ROADMAP.md) — phased delivery plan and current sprint status
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — system design, tenancy
-  model, RBAC, auth flow
+  model, RBAC, auth flow, content request workflow
+- [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) — `packages/ui` tokens,
+  component inventory, and consumption details
 - [`docs/adr/`](docs/adr/) — Architecture Decision Records (the *why* behind
   each significant technical choice)
 - [`docs/FOLDER_STRUCTURE.md`](docs/FOLDER_STRUCTURE.md) — annotated repo tree
-- [`docs/SPRINT_1.md`](docs/SPRINT_1.md) / [`docs/SPRINT_2.md`](docs/SPRINT_2.md) — per-sprint scope, endpoints, and review findings
+- [`docs/SPRINT_1.md`](docs/SPRINT_1.md) / [`docs/SPRINT_2.md`](docs/SPRINT_2.md) / [`docs/SPRINT_3A.md`](docs/SPRINT_3A.md) / [`docs/SPRINT_3B.md`](docs/SPRINT_3B.md) — per-sprint scope, endpoints, and review findings
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — branching, commit, and review conventions
 - [`CHANGELOG.md`](CHANGELOG.md) — release history (Keep a Changelog format)
 - [`LICENSE`](LICENSE) — MIT
@@ -27,10 +29,11 @@ for release history.
 
 ```
 apps/
-  api/    NestJS backend (REST API, Prisma/PostgreSQL, RBAC, auth verification)
-  web/    Next.js frontend (Auth.js SSO, brand switcher, dashboard)
+  api/    NestJS backend (REST API, Prisma/PostgreSQL, RBAC, auth verification, content request workflow)
+  web/    Next.js frontend (Auth.js SSO, brand switcher, admin dashboard, content requests)
 packages/
   shared-types/   Types/constants shared between api and web
+  ui/             Design system (tokens + components) — see docs/DESIGN_SYSTEM.md
 docker/
   docker-compose.yml   Local Postgres + Redis
 .github/workflows/     CI (lint, test, build, per workspace)
@@ -80,6 +83,7 @@ Organization) is gated to Super Admin/Marketing Head (see `docs/SPRINT_2.md`).
 npm run test --workspace=apps/api            # unit tests
 npm run test:e2e --workspace=apps/api         # e2e tests (guard chain, auth)
 npm run test --workspace=apps/web             # frontend unit tests
+npm run test --workspace=packages/ui          # design system component tests
 ```
 
 ## Development workflow

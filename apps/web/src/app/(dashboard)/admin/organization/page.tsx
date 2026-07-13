@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Alert, Button, Card, FormField, Spinner, TextInput } from '@agrosaf/ui';
 import { apiFetch } from '@/lib/api-client';
+import { PageHeader } from '@/components/shell/PageHeader';
 
 interface Organization {
   id: string;
@@ -38,18 +40,33 @@ export default function AdminOrganizationPage() {
     }
   };
 
-  if (!org) return <p>Loading…</p>;
+  if (!org) return <Spinner label="Loading organization…" />;
 
   return (
     <div>
-      <h1>Organization Settings</h1>
-      {error && <p role="alert">{error}</p>}
-      {saved && <p>Saved.</p>}
-      <p>Plan tier: {org.planTier}</p>
-      <form onSubmit={save} style={{ display: 'flex', gap: '0.5rem' }}>
-        <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
-        <button type="submit">Save</button>
-      </form>
+      <PageHeader title="Organization Settings" />
+      {error && (
+        <Alert tone="error" style={{ marginBottom: '1rem' }}>
+          {error}
+        </Alert>
+      )}
+      {saved && (
+        <Alert tone="success" style={{ marginBottom: '1rem' }}>
+          Saved.
+        </Alert>
+      )}
+
+      <Card style={{ maxWidth: 480 }}>
+        <p>
+          <strong>Plan tier:</strong> {org.planTier}
+        </p>
+        <form onSubmit={save} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+          <FormField label="Organization name" htmlFor="org-name">
+            <TextInput id="org-name" type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+          </FormField>
+          <Button type="submit">Save</Button>
+        </form>
+      </Card>
     </div>
   );
 }

@@ -2,7 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import {
+  Alert,
+  Badge,
+  Button,
+  EmptyState,
+  FormField,
+  Pagination,
+  Table,
+  TextInput,
+} from '@agrosaf/ui';
 import { apiFetch } from '@/lib/api-client';
+import { PageHeader } from '@/components/shell/PageHeader';
 
 interface User {
   id: string;
@@ -18,19 +29,29 @@ interface UsersPage {
   limit: number;
 }
 
+const STATUS_TONE: Record<User['status'], 'success' | 'warning' | 'neutral'> = {
+  ACTIVE: 'success',
+  SUSPENDED: 'warning',
+  EXPIRED: 'neutral',
+};
+
 export default function AdminUsersPage() {
   const [data, setData] = useState<UsersPage | null>(null);
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const load = () => {
-    const query = search ? `?search=${encodeURIComponent(search)}` : '';
-    apiFetch<UsersPage>(`users${query}`).then(setData).catch((e) => setError(e.message));
+    const params = new URLSearchParams({ page: String(page) });
+    if (search) params.set('search', search);
+    apiFetch<UsersPage>(`users?${params.toString()}`)
+      .then(setData)
+      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load users.'));
   };
 
-  useEffect(load, [search]);
+  useEffect(load, [search, page]);
 
   const createUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,62 +74,98 @@ export default function AdminUsersPage() {
 
   return (
     <div>
-      <h1>Users</h1>
-      {error && <p role="alert">{error}</p>}
+      <PageHeader title="Users" description="Pre-provision users ahead of first SSO login." />
+      {error && (
+        <Alert tone="error" style={{ marginBottom: '1rem' }}>
+          {error}
+        </Alert>
+      )}
 
-      <form onSubmit={createUser} style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem' }}>
-        <input
-          type="email"
-          placeholder="email@agrosaf.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="text"
-          placeholder="Full name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-        <button type="submit">Pre-provision user</button>
+      <form
+        onSubmit={createUser}
+        style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', marginBottom: '1.5rem' }}
+      >
+        <FormField label="Email" htmlFor="new-user-email">
+          <TextInput
+            id="new-user-email"
+            type="email"
+            placeholder="email@agrosaf.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </FormField>
+        <FormField label="Full name" htmlFor="new-user-name">
+          <TextInput
+            id="new-user-name"
+            type="text"
+            placeholder="Full name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+        </FormField>
+        <Button type="submit">Pre-provision user</Button>
       </form>
 
-      <input
-        type="search"
-        placeholder="Search by name or email"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{ marginBottom: '1rem' }}
-      />
+      <FormField label="Search" htmlFor="user-search" hint="By name or email">
+        <TextInput
+          id="user-search"
+          type="search"
+          value={search}
+          onChange={(e) => {
+            setPage(1);
+            setSearch(e.target.value);
+          }}
+        />
+      </FormField>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Status</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {data?.items.map((user) => (
-            <tr key={user.id}>
-              <td>
-                <Link href={`/admin/users/${user.id}`}>{user.name}</Link>
-              </td>
-              <td>{user.email}</td>
-              <td>{user.status}</td>
-              <td>
-                <button onClick={() => toggleStatus(user)}>
-                  {user.status === 'ACTIVE' ? 'Suspend' : 'Activate'}
-                </button>
-              </td>
+      {data && data.items.length === 0 ? (
+        <EmptyState title="No users match your search." />
+      ) : (
+        <Table aria-label="Users" style={{ marginTop: '1rem' }}>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th />
             </tr>
-          ))}
-        </tbody>
-      </table>
-      {data && <p>{data.total} total user(s)</p>}
+          </thead>
+          <tbody>
+            {data?.items.map((user) => (
+              <tr key={user.id}>
+                <td>
+                  <Link href={`/admin/users/${user.id}`}>{user.name}</Link>
+                </td>
+                <td>{user.email}</td>
+                <td>
+                  <Badge tone={STATUS_TONE[user.status]}>{user.status}</Badge>
+                </td>
+                <td>
+                  <Button variant="secondary" size="sm" onClick={() => toggleStatus(user)}>
+                    {user.status === 'ACTIVE' ? 'Suspend' : 'Activate'}
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
+
+      {data && (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginTop: '1rem',
+          }}
+        >
+          <span>{data.total} total user(s)</span>
+          <Pagination page={data.page} limit={data.limit} total={data.total} onPageChange={setPage} />
+        </div>
+      )}
     </div>
   );
 }

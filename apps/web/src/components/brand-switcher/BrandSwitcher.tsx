@@ -1,18 +1,19 @@
 'use client';
 
+import { Alert, Select, Spinner } from '@agrosaf/ui';
 import { useBrand } from './BrandProvider';
 
 export function BrandSwitcher() {
   const { brands, selectedBrandId, selectBrand, loading, error } = useBrand();
 
-  if (loading) return <span>Loading brands…</span>;
-  if (error) return <span role="alert">{error}</span>;
+  if (loading) return <Spinner label="Loading brands…" />;
+  if (error) return <Alert tone="error">{error}</Alert>;
   if (brands.length === 0) return <span>No brands assigned to your account.</span>;
 
   return (
     <label>
-      Brand:{' '}
-      <select
+      <span aria-hidden="true">Brand: </span>
+      <Select
         value={selectedBrandId ?? ''}
         onChange={(e) => selectBrand(e.target.value)}
         aria-label="Switch brand"
@@ -22,7 +23,7 @@ export function BrandSwitcher() {
             {brand.name}
           </option>
         ))}
-      </select>
+      </Select>
     </label>
   );
 }

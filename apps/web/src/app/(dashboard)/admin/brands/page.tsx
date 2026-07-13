@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Alert, Button, FormField, Table, TextInput } from '@agrosaf/ui';
 import { apiFetch } from '@/lib/api-client';
+import { PageHeader } from '@/components/shell/PageHeader';
 
 interface Brand {
   id: string;
@@ -55,10 +57,14 @@ export default function AdminBrandsPage() {
 
   return (
     <div>
-      <h1>Brands</h1>
-      {error && <p role="alert">{error}</p>}
+      <PageHeader title="Brands" />
+      {error && (
+        <Alert tone="error" style={{ marginBottom: '1rem' }}>
+          {error}
+        </Alert>
+      )}
 
-      <table style={{ marginBottom: '1rem' }}>
+      <Table aria-label="Brands" style={{ marginBottom: '1.5rem' }}>
         <thead>
           <tr>
             <th>Name</th>
@@ -72,7 +78,11 @@ export default function AdminBrandsPage() {
             <tr key={brand.id}>
               <td>
                 {editingId === brand.id ? (
-                  <input value={editingName} onChange={(e) => setEditingName(e.target.value)} />
+                  <TextInput
+                    aria-label={`Edit name for ${brand.name}`}
+                    value={editingName}
+                    onChange={(e) => setEditingName(e.target.value)}
+                  />
                 ) : (
                   brand.name
                 )}
@@ -81,32 +91,42 @@ export default function AdminBrandsPage() {
               <td>{brand.localeDefault}</td>
               <td>
                 {editingId === brand.id ? (
-                  <button onClick={() => saveEdit(brand.id)}>Save</button>
+                  <Button size="sm" onClick={() => saveEdit(brand.id)}>
+                    Save
+                  </Button>
                 ) : (
-                  <button onClick={() => startEdit(brand)}>Edit</button>
+                  <Button variant="secondary" size="sm" onClick={() => startEdit(brand)}>
+                    Edit
+                  </Button>
                 )}
               </td>
             </tr>
           ))}
         </tbody>
-      </table>
+      </Table>
 
-      <form onSubmit={createBrand} style={{ display: 'flex', gap: '0.5rem' }}>
-        <input
-          type="text"
-          placeholder="Brand name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-        <input
-          type="text"
-          placeholder="brand-slug"
-          value={slug}
-          onChange={(e) => setSlug(e.target.value)}
-          required
-        />
-        <button type="submit">Create brand</button>
+      <form onSubmit={createBrand} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+        <FormField label="Brand name" htmlFor="brand-name">
+          <TextInput
+            id="brand-name"
+            type="text"
+            placeholder="Brand name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+        </FormField>
+        <FormField label="Slug" htmlFor="brand-slug">
+          <TextInput
+            id="brand-slug"
+            type="text"
+            placeholder="brand-slug"
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+            required
+          />
+        </FormField>
+        <Button type="submit">Create brand</Button>
       </form>
     </div>
   );

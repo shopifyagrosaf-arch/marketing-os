@@ -10,6 +10,7 @@ import { BrandsModule } from './modules/brands/brands.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { UsersModule } from './modules/users/users.module';
+import { ContentRequestsModule } from './modules/content-requests/content-requests.module';
 import { HealthModule } from './modules/health/health.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -37,6 +38,7 @@ import { validateEnv } from './config/env.validation';
     RolesModule,
     PermissionsModule,
     UsersModule,
+    ContentRequestsModule,
     HealthModule,
   ],
   providers: [

@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { Alert, Button, EmptyState, Select, Table } from '@agrosaf/ui';
 import { apiFetch } from '@/lib/api-client';
+import { PageHeader } from '@/components/shell/PageHeader';
 
 interface BrandAccessGrant {
   id: string;
@@ -58,48 +60,63 @@ export default function UserBrandAccessPage() {
 
   return (
     <div>
-      <h1>Brand Access</h1>
-      {error && <p role="alert">{error}</p>}
+      <PageHeader title="Brand Access" />
+      {error && (
+        <Alert tone="error" style={{ marginBottom: '1rem' }}>
+          {error}
+        </Alert>
+      )}
 
-      <table style={{ marginBottom: '1rem' }}>
-        <thead>
-          <tr>
-            <th>Brand</th>
-            <th>Role</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {grants.map((g) => (
-            <tr key={g.id}>
-              <td>{g.brand.name}</td>
-              <td>{g.role.name}</td>
-              <td>
-                <button onClick={() => revoke(g.id)}>Revoke</button>
-              </td>
+      {grants.length === 0 ? (
+        <EmptyState title="No brand access granted yet." />
+      ) : (
+        <Table aria-label="Brand access grants" style={{ marginBottom: '1.5rem' }}>
+          <thead>
+            <tr>
+              <th>Brand</th>
+              <th>Role</th>
+              <th />
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {grants.map((g) => (
+              <tr key={g.id}>
+                <td>{g.brand.name}</td>
+                <td>{g.role.name}</td>
+                <td>
+                  <Button variant="danger" size="sm" onClick={() => revoke(g.id)}>
+                    Revoke
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
 
       <form onSubmit={grant} style={{ display: 'flex', gap: '0.5rem' }}>
-        <select value={brandId} onChange={(e) => setBrandId(e.target.value)} required>
+        <Select
+          aria-label="Select brand"
+          value={brandId}
+          onChange={(e) => setBrandId(e.target.value)}
+          required
+        >
           <option value="">Select brand</option>
           {brands.map((b) => (
             <option key={b.id} value={b.id}>
               {b.name}
             </option>
           ))}
-        </select>
-        <select value={roleId} onChange={(e) => setRoleId(e.target.value)} required>
+        </Select>
+        <Select aria-label="Select role" value={roleId} onChange={(e) => setRoleId(e.target.value)} required>
           <option value="">Select role</option>
           {roles.map((r) => (
             <option key={r.id} value={r.id}>
               {r.name}
             </option>
           ))}
-        </select>
-        <button type="submit">Grant access</button>
+        </Select>
+        <Button type="submit">Grant access</Button>
       </form>
     </div>
   );

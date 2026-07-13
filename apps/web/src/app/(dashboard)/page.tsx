@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api-client';
 import { useBrand } from '@/components/brand-switcher/BrandProvider';
+import { PageHeader } from '@/components/shell/PageHeader';
 
 interface Me {
   id: string;
@@ -28,7 +29,7 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <h1>Dashboard</h1>
+      <PageHeader title="Dashboard" />
       {me && (
         <p>
           Signed in as {me.name} ({me.email})

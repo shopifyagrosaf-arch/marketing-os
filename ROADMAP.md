@@ -15,8 +15,9 @@ in-app/email notifications, foundational RBAC and admin tooling.
 |---|---|---|
 | 1 | Auth/SSO, Organization→Brand schema, RBAC foundation, brand switcher shell | ✅ Done — `v0.1.0-foundation` |
 | 2 | User/Role/Permission management (full CRUD, not just UI), Organization/Brand admin, Admin Dashboard | ✅ Done — `v0.2.0-sprint2` |
-| 3 | Content Request intake + workflow engine skeleton (status enum + transitions) | ⏳ Next |
-| 4 | AI Mode 1 integration (async drafting), Content Editor with version history | Planned |
+| 3A | Design System (`packages/ui`) + Admin UI Foundation — inserted ahead of the original Sprint 3 so its UI (and every sprint after) is built on real components, not more inline-styled pages | ✅ Done — `v0.3.0-sprint3` |
+| 3B | Content Request intake + workflow engine skeleton (status enum + transitions) — the original Sprint 3 scope, run right after 3A | ✅ Done — `v0.3.0-sprint3` |
+| 4 | AI Mode 1 integration (async drafting), Content Editor with version history | ⏳ Next |
 | 5 | Brand Review stage + Compliance conditional branch + compliance rule config | Planned |
 | 6 | Design upload/versioning + Design Approval stage | Planned |
 | 7 | Marketing Head Approval + Publishing Queue (manual, per docs/adr/0006) + audit log wiring | Planned |
@@ -63,3 +64,11 @@ in-app/email notifications, foundational RBAC and admin tooling.
   Permissions, Organization, Brand admin) plus the Admin Dashboard UI, since
   the UI has nothing to render without the underlying endpoints. Sprints
   3+ above are renumbered against what's actually left, not the original count.
+- Sprint 3 (Content Request intake) was split into 3A and 3B at the user's
+  request: 3A inserts a Design System (`packages/ui`) and Admin UI
+  Foundation ahead of the original Sprint 3 scope, which then runs as 3B —
+  so the new Content Request UI (and everything after it) is built on real
+  components from the start instead of adding more inline-styled pages that
+  would need refactoring later (Sprint 1/2's admin pages were inline-styled
+  "functional, not visually polished" placeholders, per `docs/SPRINT_2.md`).
+  Sprint 4 onward keeps its original numbering — only Sprint 3 split into two.

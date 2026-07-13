@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import '@agrosaf/ui/tokens.css';
 
 export const metadata: Metadata = {
   title: 'Agrosaf Marketing OS',

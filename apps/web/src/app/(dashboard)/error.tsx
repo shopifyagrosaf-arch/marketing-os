@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { Alert, Button } from '@agrosaf/ui';
 
 /**
  * Next.js error boundary for everything under (dashboard) — catches
@@ -20,10 +21,14 @@ export default function DashboardError({
   }, [error]);
 
   return (
-    <div role="alert" style={{ padding: '2rem' }}>
-      <h2>Something went wrong.</h2>
-      <p>{error.message}</p>
-      <button onClick={reset}>Try again</button>
-    </div>
+    <Alert tone="error" style={{ flexDirection: 'column', gap: '0.75rem' }}>
+      <div>
+        <strong>Something went wrong.</strong>
+        <p style={{ margin: '0.25rem 0 0' }}>{error.message}</p>
+      </div>
+      <Button variant="secondary" size="sm" onClick={reset} style={{ alignSelf: 'flex-start' }}>
+        Try again
+      </Button>
+    </Alert>
   );
 }
